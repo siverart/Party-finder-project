@@ -68,11 +68,10 @@ const userScheme = new mongoose.Schema({
     timestamps: true
 });
 
-userScheme.pre('save', function(next) {
+userScheme.pre('save', async function() {
     if (!this.displayName) {
         this.displayName = this.username;
     }
-    next();
 });
 
 userScheme.index({isOnline: 1})

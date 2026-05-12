@@ -9,7 +9,7 @@ const register = async (req, res) => {
     try{
         // ดึงข้อมูล
         const { username, password, email } = req.body;
-
+        
         // เช็คว่าซ้ำไหม
         const existingUser = await User.findOne({ username });
         if (existingUser) return res.status(400).json({ message : "มีผู้ใช้ชื่อนี้แล้ว"})
@@ -19,10 +19,11 @@ const register = async (req, res) => {
 
         // password hash
         const hashedPassword = await bcrypt.hash(password, 10);
+        
         // create token
         const token = crypto.randomBytes(20).toString('hex')
         const tokenExpireAt = Date.now() + 24 * 60 * 60 * 1000
-
+        
         const newUser = new User(
             { 
                 username, 
@@ -34,12 +35,12 @@ const register = async (req, res) => {
         );
 
         await newUser.save();
-
+        
         await activationMailSender(email, token, username)
-
+        
         res.status(201).json({ message: "สมัครสมาชิกสำเร็จ กรุณาตรวจสอบอีเมลของท่านภายใน 24 ชั่วโมง"})
     } catch (err) {
-        res.status(500).json( {message: `สมัครสมาชิกไม่สำเร็จ เกิดข้อผิดพลาด: ${err}` })
+        res.status(500).json( {message: `สมัครสมาชิกไม่สำเร็จ เกิดข้อผิดพลาด: ${err.message}, stack: ${err.stack}` })
     }
 }
 
@@ -66,7 +67,7 @@ const resendActivationEmail = async (req, res) => {
         res.status(200).json({ message: 'ทำการส่งลิงค์อีกรอบแล้ว'})
     
     } catch (err) {
-        res.status(500).json({ message: "เกิดข้อผิดพลาดบางประการ"})
+        res.status(500).json({ message: `เกิดข้อผิดพลาดบางประการ : ${err.message}` })
     }
 }
 
@@ -90,8 +91,8 @@ const activation = async (req, res) => {
 
         return res.status(200).json( { message: "ไอดีของคุณถูกเปิดใช้งานแล้ว ยินดีต้อนรับเข้าสู่สังคมเกมเมอร์"} )
     } catch (err) {
-        return res.status(500).json( { message : "เกิดข้อผิดพลาดขึ้นบางประการ" } )
+        return res.status(500).json( { message : `เกิดข้อผิดพลาดบางประการ : ${err.message}` } )
     }
 };
 
-module.exports = { register, resendActivationEmail, login, activation}
+module.exports = { register, resendActivationEmail, activation}
