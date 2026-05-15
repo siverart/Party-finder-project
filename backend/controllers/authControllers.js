@@ -1,7 +1,8 @@
 const User = require("../models/User");
 const crypto = require('crypto')
 const activationMailSender = require("../utils/emailSender")
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcrypt');
+const jwt = require("jsonwebtoken");
 
 
 
@@ -47,9 +48,9 @@ const register = async (req, res) => {
 const resendActivationEmail = async (req, res) => {
     try{
         const { email } = req.body;
-        
+
         // fetch data from database
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email : email.toLowerCase() });
 
         if (!user) return res.status(400).json({ message: "ไม่พบอีเมลผู้ใช้"})
         if (user.isActive) return res.status(400).json({ message: "ไอดีของผู้ใช้เปิดใช้งานเรียบร้อยแล้วครับ"})
@@ -95,4 +96,36 @@ const activation = async (req, res) => {
     }
 };
 
-module.exports = { register, resendActivationEmail, activation}
+const login = async (req, res) => {
+    try {
+        const { password, username } = req.body;
+        const user = await User.findOne({username : username.toLowerCase() })
+        
+        if (!user) return res.status(400).json({ message: "ไม่พบผู้ใช้"})
+        if (!user.isActive) {
+            return res.status(401).json({ message: "กรุณายืนยันตัวตนผ่านอีเมลก่อนเข้าสู่ระบบครับ" });
+        }
+        
+        const isAuthenticate = await bcrypt.compare(password, user.password)
+
+        if (!isAuthenticate) {
+            return res.status(400).json( { message : "รหัสผ่านไม่ถูกต้อง"})
+        }
+
+        const loginToken = jwt.sign(
+            { id: user._id, username: user.username },
+            process.env.JWT_SECRET,
+            { expiresIn: '1d'}
+        )
+
+        return res.status(200).json(
+            { 
+                token : loginToken,
+                username : user.displayName || user.username
+
+            })
+    } catch (err) {
+        return res.status(500).json( { message : `เกิดข้อผิดพลาดบางประการ : ${err.message}` } )
+    }
+}
+module.exports = { register, resendActivationEmail, activation, login}

@@ -5,7 +5,8 @@ const userScheme = new mongoose.Schema({
         type: String,
         required: [true, 'กรุณาระบุชื่อผู้ใช้'],
         unique: true,
-        trim: true
+        trim: true,
+        lowercase : true
     },
     password: {
         type: String,
