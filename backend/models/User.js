@@ -5,7 +5,8 @@ const userScheme = new mongoose.Schema({
         type: String,
         required: [true, 'กรุณาระบุชื่อผู้ใช้'],
         unique: true,
-        trim: true
+        trim: true,
+        lowercase : true
     },
     password: {
         type: String,
@@ -61,17 +62,17 @@ const userScheme = new mongoose.Schema({
         default: Date.now
     },
     activationToken: String,
+    activationExpires: Date,
     resetPasswordToken: String,
     resetPasswordExpires: Date
 }, {
     timestamps: true
 });
 
-userScheme.pre('save', function(next) {
+userScheme.pre('save', async function() {
     if (!this.displayName) {
         this.displayName = this.username;
     }
-    next();
 });
 
 userScheme.index({isOnline: 1})

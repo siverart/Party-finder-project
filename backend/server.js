@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const authRoutes = require('./routes/authRoutes.js')
 require('dotenv').config();
 
 const app = express()
@@ -8,6 +9,8 @@ const app = express()
 // Middleware
 app.use(cors());
 app.use(express.json()); // อ่าน json ที่ส่งมาได้
+
+app.use('/auth', authRoutes);
 
 //connect to mongodb
 mongoose.connect(process.env.MONGO_URI)

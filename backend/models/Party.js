@@ -20,7 +20,8 @@ const partyScheme = new mongoose.Schema({
         required: [true, 'กรุณาระบุชื่อเกม']
     },
     gameMode: {
-        type: String
+        type: String,
+        default: 'standard'
     },
     rankRequirement: {
         type: Number
