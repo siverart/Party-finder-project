@@ -13,8 +13,7 @@ const auth = async (req, res, next) => {
         req.user = verified;
         next();
     } catch (err) {
-        res.status(401).json({ message: `โทเค็นไม่ถูกต้อง หรือ หมดอายุแล้ว ${err}`,
-        errStack: `${err.Stack}` });
+        res.status(401).json({ message: `โทเค็นไม่ถูกต้อง หรือ หมดอายุแล้ว` });
 
     }
 }
