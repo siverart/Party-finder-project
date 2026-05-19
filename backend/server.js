@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const authRoutes = require('./routes/authRoutes.js')
+const profileRoutes = require('./routes/profileRoutes.js')
 require('dotenv').config();
 
 const app = express()
@@ -10,8 +11,8 @@ const app = express()
 app.use(cors());
 app.use(express.json()); // อ่าน json ที่ส่งมาได้
 
-app.use('/auth', authRoutes);
-
+app.use('/api/auth', authRoutes);
+app.use('/api/profile', profileRoutes);
 //connect to mongodb
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log('✅ MongoDB Connected Successfully'))

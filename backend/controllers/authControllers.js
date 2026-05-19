@@ -68,7 +68,7 @@ const resendActivationEmail = async (req, res) => {
         res.status(200).json({ message: 'ทำการส่งลิงค์อีกรอบแล้ว'})
     
     } catch (err) {
-        res.status(500).json({ message: `เกิดข้อผิดพลาดบางประการ : ${err.message}` })
+        res.status(500).json({ message: `เกิดข้อผิดพลาดบางประการ : ${err.message}, stack: ${err.stack}` })
     }
 }
 
@@ -92,7 +92,7 @@ const activation = async (req, res) => {
 
         return res.status(200).json( { message: "ไอดีของคุณถูกเปิดใช้งานแล้ว ยินดีต้อนรับเข้าสู่สังคมเกมเมอร์"} )
     } catch (err) {
-        return res.status(500).json( { message : `เกิดข้อผิดพลาดบางประการ : ${err.message}` } )
+        return res.status(500).json( { message : `เกิดข้อผิดพลาดบางประการ : ${err.message}, stack: ${err.stack}` } )
     }
 };
 
@@ -125,7 +125,7 @@ const login = async (req, res) => {
 
             })
     } catch (err) {
-        return res.status(500).json( { message : `เกิดข้อผิดพลาดบางประการ : ${err.message}` } )
+        return res.status(500).json( { message : `เกิดข้อผิดพลาดบางประการ : ${err.message}, stack: ${err.stack}` } )
     }
 }
 module.exports = { register, resendActivationEmail, activation, login}

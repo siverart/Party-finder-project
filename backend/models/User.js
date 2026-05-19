@@ -19,11 +19,14 @@ const userScheme = new mongoose.Schema({
         lowercase: true
     },
     displayName: {
-        type: String
+        type: String,
+        maxlength: [30, 'ชื่อห้ามเกิน 30 ตัวอักษร']
     },
     description: {
         type: String,
-        default: ''
+        default: '',
+        maxlength: [200, 'ชื่อห้ามเกิน 200 ตัวอักษร'],
+        trim: true
     },
     contacts: [
         {
