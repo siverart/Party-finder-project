@@ -15,7 +15,7 @@ const sendActivationEmail = async (userEmail, token, username) => {
     })
 
     // สร้างลิงค์แนบโทเค่น
-    const activationUrl = `http://localhost:5000/auth/activate/${token}`
+    const activationUrl = `http://localhost:5000/api/auth/activate/${token}`
 
     //สร้าง body เมล
     const mailOption = {
