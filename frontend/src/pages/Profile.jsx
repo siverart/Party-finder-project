@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 function Profile(){
     const [ displayName, setDisplayName ] = useState("");
@@ -10,16 +10,21 @@ function Profile(){
     const [ contacts , setContacts ] = useState([]);
     const [ newPlatform, setNewPlatform ] = useState("");
     const [ newContactValue, setNewContactValue ] = useState("");
-    const [ newIsShare, setNewIsShare ] = useState("");
+    const [ newIsShare, setNewIsShare ] = useState(false);
     const [ tags , setTags ] = useState([]);
     const [ newTag, setNewTag ] = useState("");
-    const [ rating, setRating ] = useState("");
+    const [ rating, setRating ] = useState(0);
+    const [ oldPassword, setOldPassword ] = useState("");
+    const [ newPassword, setNewPassword ] = useState("");
+    const [ isContactModalOpen, setIsContactModalOpen ] = useState(false);
+    const [ isTagModalOpen, setIsTagModalOpen ] = useState(false);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token) {
             alert("กรุณาเข้าสู่ระบบก่อนใช้งาน");
-            Navigate('/login');
+            navigate('/login');
         } else {
             getProfile()
         }
@@ -45,7 +50,7 @@ function Profile(){
         }
     }
     const handleUpdateDisplayName = async (e) => {
-        e.prevendefault();
+        e.preventDefault();
         if (!newDisplayName) return;
         const token = localStorage.getItem('token')
 
@@ -71,7 +76,7 @@ function Profile(){
             const response = await axios.patch('http://localhost:5000/api/profile/update-displayName-description', {
                 description: newDescription
             }, {
-                header : {
+                headers : {
                     Authorization : `Bearer ${token}`
                 }
             });
@@ -84,7 +89,7 @@ function Profile(){
         }
     }
     const handleAddContact = async (e) => {
-        e.prevendefault();
+        e.preventDefault();
         if ( !newContactValue || !newPlatform ) return;
         const token = localStorage.getItem('token');
         try {
@@ -103,6 +108,7 @@ function Profile(){
             setNewContactValue("")
             setNewPlatform("")
             setNewIsShare("")
+            setIsContactModalOpen(false)
         } catch (error) {
             console.error("Add contact unsuccessful", error)
         }
@@ -127,7 +133,7 @@ function Profile(){
 
     } 
     const handleAddTag = async (e) => {
-        e.prevendefault();
+        e.preventDefault();
         const token = localStorage.getItem('token')
 
         try {
@@ -137,7 +143,7 @@ function Profile(){
                 
                 },
                 {
-                    header : {
+                    headers : {
                         Authorization : `Bearer ${token}`
                     }
                 }
@@ -146,6 +152,7 @@ function Profile(){
         alert(message)
         setTags(tags)
         setNewTag("")
+        setIsTagModalOpen(false)
         } catch (error) {
             console.error("Add tag unsuccessful", error)
         }
@@ -155,12 +162,8 @@ function Profile(){
         try {
             const response = await axios.delete('http://localhost:5000/api/profile/delete-tag', 
                 {
-                    tag : deletedTag
-                },
-                {
-                    header : {
-                        Authorization : `Bearer ${token}`
-                    }
+                    data : {tag : deletedTag},
+                    headers: { Authorization: `Bearer ${token}` }
                 }
             );
             const { message, tags } = response.data
@@ -172,8 +175,33 @@ function Profile(){
         }
     }
     const handleResetPasswordInProfile = async (e) => {
-        e.prevendefault();
+        e.preventDefault();
+        if ( !oldPassword || !newPassword ) return;
+
+        const token = localStorage.getItem('token');
+
+        try {
+            const response = await axios.post('http://localhost:5000/api/profile/resetpassword-in-profile', 
+                {
+                   oldPassword : oldPassword,
+                   newPassword : newPassword 
+                },
+                {
+                    headers : {
+                        Authorization : `Bearer ${token}`
+                    }
+                }
+            );
+            alert(response.data.message)
+            setNewPassword("")
+            setOldPassword("")
+        } catch (error) {
+            console.error("Reset password unsuccessful", error)
+        }
     }
+    return (
+        
+    ) 
     
 }
 export default Profile;
