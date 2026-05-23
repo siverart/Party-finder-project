@@ -25,7 +25,7 @@ function Register(){
             justifyContent: 'center',
             alignItems: 'center',
             minHeight: '100vh',
-            backgrounColor: '#f5f5f5'
+            backgroundColor: '#1a1a1a'
         }}
     >
         <form 
