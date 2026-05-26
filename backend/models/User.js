@@ -30,7 +30,7 @@ const userScheme = new mongoose.Schema({
     },
     contacts: [
         {
-            platform: {type: String, enum: ['Facebook', 'Instagram', 'Steam', 'Line', 'Varolant', 'LOL' ]},
+            platform: {type: String, enum: ['Facebook', 'Instagram', 'Steam', 'Line', 'Varolant', 'LOL', 'Discord' ]},
             value: {type: String},
             isShare: {type: Boolean, default: false}
         }
@@ -63,6 +63,10 @@ const userScheme = new mongoose.Schema({
     lastSeen: {
         type: Date,
         default: Date.now
+    },
+    profileImage: {
+        type: String,
+        default: "http://localhost:5000/uploads/default-avatar.png"
     },
     activationToken: String,
     activationExpires: Date,
