@@ -71,7 +71,7 @@ const deleteContact = async (req, res) => {
         const { contactId } = req.params ;
         const updatedUser = await User.findByIdAndUpdate(req.user.id, {
             $pull: { contacts: { _id: contactId } }
-        }, { new: true });
+        }, { returnDocument: 'after' });
 
         return res.status(200).json({ 
             message : "ลบช่องทางติดต่อสำเร็จ",
@@ -109,17 +109,24 @@ const addTag = async (req, res) => {
 
 const deleteTag = async (req, res) => {
     try { 
-            const { tag } = req.body;
-            if (!tag) {
-                return res.status(400).json({ message: "กรุณาระบุชื่อแท็กที่ต้องการลบ" });
-            }
+            const { tagIndex } = req.body;
+            const userId = req.user.id;
+            if (tagIndex === undefined || tagIndex === null) return;
+            
+            await User.updateOne(
+                { _id: userId },
+                { $set: { [ `tags.${ tagIndex }`]: null } }
+                
+            );
 
-            const updatedUser = await User.findByIdAndUpdate(req.user.id, {
-                $pull: { tags: tag }
-            }, { new: true })
+            const updatedUser = await User.findByIdAndUpdate(
+                { _id: userId}, 
+                { $pull: { tags: null } }, 
+                { returnDocument: 'after' }
+            );
 
             return res.status(200).json({ 
-                message : `ลบ tag ${tag} ออกเรียบร้อย`,
+                message : `ลบแท๊กสำเร็จ`,
                 tags : updatedUser.tags
             })
     } catch (err) {
