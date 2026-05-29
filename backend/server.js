@@ -14,7 +14,7 @@ app.use(express.json()); // อ่าน json ที่ส่งมาได้
 
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
-app.use('/api/party', partyRoutes)
+app.use('/api/party', partyRoutes);
 //connect to mongodb
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log('✅ MongoDB Connected Successfully'))

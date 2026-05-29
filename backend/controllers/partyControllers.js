@@ -47,7 +47,21 @@ const getSingleRoom = async (req, res) => {
 
 const createRoom = async (req, res) => {
     try{
-        const hostId = req.user.id
+        const hostId = req.user.id;
+        
+        // 🎯 1. เช็คก่อนว่า โฮสต์คนนี้มีห้องที่ยังใช้งานอยู่ ('waiting' หรือ 'full') ในระบบแล้วหรือยัง
+        const existingRoom = await Party.findOne({
+            host: hostId,
+            roomStatus: { $in: ['waiting', 'full'] }
+        });
+
+        // ถ้าเจอห้องเก่าที่ยังเปิดอยู่ ส่งสเตตัส 400 ตีกลับทันที ห้ามสร้างซ้ำ!
+        if (existingRoom) {
+            return res.status(400).json({
+                success: false,
+                message: "คุณมีห้องที่กำลังใช้งานอยู่ในระบบแล้ว ไม่สามารถสร้างห้องซ้ำได้"
+            });
+        }
         const { 
                 roomName, 
                 description, 
@@ -99,19 +113,51 @@ const deleteRoom = async (req, res) => {
     try {
         const room = await Party.findById(roomId)
         if (!room) return res.status(404).json({success: false, message: "ไม่พบห้อง"})
+
+        // เช็คว่าใช่เจ้าของห้องไหม
         if (room.host.toString() !== req.user.id) return res.status(403).json({success: false, message : "คุณไม่มีสิทธิ์ลบห้องนี้"})
         
-        await Party.findByIdAndDelete(roomId)
+        // ลบด้วยการเปลี่ยนสถานะห้อง
+        room.roomStatus = 'cancel';
+        await room.save();
 
         res.status(200).json({
             success: true,
-            message: "ลบห้องสำเร็จ",
-            deletedRoomId: roomId
+            message: "ยกเลิกห้องสำเร็จแล้ว",
+            deletedRoomId: room
         });
     } catch (error) {
         res.status(500).json({ success: false, message: "เกิดข้อผิดพลาดในการลบห้อง" });
     }
 }
+
+const completeRoom = async (req, res) => {
+    const { roomId } = req.params;
+    if (!roomId) return res.status(400).json({ success: false, message: "กรุณาระบุไอดีห้อง" });
+
+    try {
+        const room = await Party.findById(roomId);
+        if (!room) return res.status(404).json({ success: false, message: "ไม่พบห้อง" });
+
+        // มีแค่โฮสต์เท่านั้นที่มีสิทธิ์กดจบห้อง
+        if (room.host.toString() !== req.user.id) {
+            return res.status(403).json({ success: false, message: "คุณไม่มีสิทธิ์กดจบการเล่นในห้องนี้" });
+        }
+
+        // 🎯 เปลี่ยนสเตตัสเป็น complete
+        room.roomStatus = 'complete';
+        await room.save();
+
+        res.status(200).json({
+            success: true,
+            message: "จบการเล่นและปิดห้องปาร์ตี้สำเร็จ!",
+            data: room
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "เกิดข้อผิดพลาดในการปิดห้อง" });
+    }
+}
+
 
 
 const findRoom = async (req, res) => {
@@ -120,6 +166,15 @@ const findRoom = async (req, res) => {
         const user = await User.findById(req.user.id)
 
         let queryConditions = {};
+
+        if (user && user.rating) {
+            // สมมติว่าต้องการเอา score (เช่น 100) มาใช้เทียบ
+            const userScore = user.rating.score || 0; 
+            
+            queryConditions.minRating = { 
+                $lte: userScore // 🎯 ตอนนี้จะเป็นตัวเลขเดี่ยว ๆ เช่น { $lte: 100 } แล้ว ไม่พังแน่นอน!
+            };
+        }
 
         if (gameName) { 
             queryConditions.gameName = gameName;
@@ -141,7 +196,7 @@ const findRoom = async (req, res) => {
         }
 
         if (language) {
-            queryConditions.languages = { $in: [language] };
+            queryConditions.languages = { $in: language };
         }
 
         if (playTimeStart) {
@@ -158,6 +213,7 @@ const findRoom = async (req, res) => {
 
         res.status(200).json({ success: true, count: matchedRoom.length, data: matchedRoom});
     } catch (error) {
+        console.error("❌ Matchmaking Error Details:", error); // 🌟 บรรทัดนี้จะช่วยชีวิตเรา! มันจะฟ้องเลยว่าบรรทัดไหนพัง
         res.status(500).json({ message: "ระบบ Matchmaking ขัดข้อง" });
     }
 }
@@ -194,4 +250,4 @@ const getOtherProfile = async (req, res) => {
 };
 
 
-module.exports = { getAllRoom, getSingleRoom, createRoom, deleteRoom, findRoom, getOtherProfile}
+module.exports = { getAllRoom, getSingleRoom, createRoom, deleteRoom, completeRoom, findRoom, getOtherProfile}

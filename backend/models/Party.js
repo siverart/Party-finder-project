@@ -17,7 +17,8 @@ const partyScheme = new mongoose.Schema({
     },
     gameName: {
         type: String,
-        required: [true, 'กรุณาระบุชื่อเกม']
+        required: [true, 'กรุณาระบุชื่อเกม'],
+        enum: ['Valorant', 'LOL', 'POE2']
     },
     gameMode: {
         type: String,
