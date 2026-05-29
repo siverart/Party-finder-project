@@ -4,7 +4,7 @@ const Party = require("../models/Party")
 
 const getAllRoom = async (req, res) => {
     try {
-        const allRoom = await Party.find( { roomStatus: 'waiting', 'full' } )
+        const allRoom = await Party.find( { roomStatus: { $in : ['waiting', 'full'] } } )
         .populate('host', 'displayName rating')
         .sort({ createdAt: -1 });
 
@@ -68,7 +68,7 @@ const createRoom = async (req, res) => {
                 rankRequirement: rank,
                 server: server,
                 hasMic: hasMic,
-                language: language,
+                languages: language,
                 minRating: minRating,
                 maxPlayer: maxPlayer,
                 playTime: playTime,
@@ -97,7 +97,7 @@ const deleteRoom = async (req, res) => {
     const { roomId } = req.params;
     if (!roomId) return res.status(400).json({success: false, message : "กรุณาระบุไอดีห้องที่ต้องการลบด้วย"});
     try {
-        const room = await Party.finById(roomId)
+        const room = await Party.findById(roomId)
         if (!room) return res.status(404).json({success: false, message: "ไม่พบห้อง"})
         if (room.host.toString() !== req.user.id) return res.status(403).json({success: false, message : "คุณไม่มีสิทธิ์ลบห้องนี้"})
         
@@ -128,7 +128,7 @@ const findRoom = async (req, res) => {
         if (rank) {
             queryConditions.rankRequirement = {
                 $gte: rank - 2,
-                $lte: rank - 1
+                $lte: rank + 2
             }
         }
 
@@ -141,7 +141,7 @@ const findRoom = async (req, res) => {
         }
 
         if (language) {
-            queryConditions.language = { $in: [language] };
+            queryConditions.languages = { $in: [language] };
         }
 
         if (playTimeStart) {
@@ -150,7 +150,10 @@ const findRoom = async (req, res) => {
 
         queryConditions.roomStatus = 'waiting';
 
-        const matchedRoom = await Party.find(queryConditions.populate('host', 'displayName rating'.populate('members', 'displayName')));
+        const matchedRoom = await Party.find(queryConditions)
+        .populate('host', 'displayName rating')
+        .populate('members', 'displayName');
+
         if (!matchedRoom) return res.status(404).json({ success: false, message: "ไม่พบห้องที่ตรงตามเงื่อนไข"})
 
         res.status(200).json({ success: true, count: matchedRoom.length, data: matchedRoom});
@@ -161,13 +164,13 @@ const findRoom = async (req, res) => {
  
 const getOtherProfile = async (req, res) => {
     try{
-        const { targetUserId } = req.params;
-        const targetUser = await User.findById(targetUserId).select('displayName description tags contacts rating');;
+        const { findedId } = req.params;
+        const targetUser = await User.findById(findedId).select('displayName description tags contacts rating');;
         if (!targetUser) return res.status(404).json({ success: false, message: "ไม่พบผู้ใช้ที่ต้องการ"});
 
         const targetUserObj = targetUser.toObject();
 
-        if ( targetUserId !== req.user.id ) {
+        if ( findedId !== req.user.id ) {
 
             targetUserObj.contacts = targetUserObj.contacts.map(contact => {
                 if (contact.isShare === false) {
@@ -182,12 +185,13 @@ const getOtherProfile = async (req, res) => {
         
         res.status(200).json({
             success: true,
-            data: userObj
+            data: targetUserObj
         });
 
     } catch (error) {
         res.status(500).json({ success: false, message: "เกิดข้อผิดพลาดในการดึงโปรไฟล์" });
     }
 };
+
 
 module.exports = { getAllRoom, getSingleRoom, createRoom, deleteRoom, findRoom, getOtherProfile}
