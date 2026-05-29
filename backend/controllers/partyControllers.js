@@ -107,7 +107,7 @@ const createRoom = async (req, res) => {
     }
 }
 
-const deleteRoom = async (req, res) => {
+const cancelRoom = async (req, res) => {
     const { roomId } = req.params;
     if (!roomId) return res.status(400).json({success: false, message : "กรุณาระบุไอดีห้องที่ต้องการลบด้วย"});
     try {
@@ -250,4 +250,4 @@ const getOtherProfile = async (req, res) => {
 };
 
 
-module.exports = { getAllRoom, getSingleRoom, createRoom, deleteRoom, completeRoom, findRoom, getOtherProfile}
+module.exports = { getAllRoom, getSingleRoom, createRoom, cancelRoom, completeRoom, findRoom, getOtherProfile}
