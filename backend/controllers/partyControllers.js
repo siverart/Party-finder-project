@@ -35,6 +35,7 @@ const getSingleRoom = async (req, res) => {
 
         return res.status(200).json( {
             success: true,
+            message: "ดึงข้อมูลห้องสำเร็จ",
             data: wantedRoom
          } )
     } catch (error) {
