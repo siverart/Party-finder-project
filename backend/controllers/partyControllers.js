@@ -107,28 +107,122 @@ const createRoom = async (req, res) => {
     }
 }
 
-const cancelRoom = async (req, res) => {
-    const { roomId } = req.params;
-    if (!roomId) return res.status(400).json({success: false, message : "กรุณาระบุไอดีห้องที่ต้องการลบด้วย"});
+const updateRoom = async (req, res) => {
+
+    const { roomId } = req.params
+    if (!roomId) return res.status(400).json({ success: false, message: "กรุณาระบุไอดีห้องมาด้วย"})
+
+    const hostId = req.user.id;
+     
+    
     try {
         const room = await Party.findById(roomId)
-        if (!room) return res.status(404).json({success: false, message: "ไม่พบห้อง"})
+        if (!room) return res.status(404).json( {success: false, message: "ไม่พบห้อง"})
 
-        // เช็คว่าใช่เจ้าของห้องไหม
-        if (room.host.toString() !== req.user.id) return res.status(403).json({success: false, message : "คุณไม่มีสิทธิ์ลบห้องนี้"})
+        if (hostId !== room.host.toString()) return res.status(403).json({ success: false, message:"คุณไม่มีสิทธิ์แก้ไขห้องนี้"})
+
+        const { roomName, description, gameName, rank, server, hasMic, languages, maxPlayer, rating } = req.body;
         
-        // ลบด้วยการเปลี่ยนสถานะห้อง
-        room.roomStatus = 'cancel';
-        await room.save();
+        let updateData = {}
 
-        res.status(200).json({
+        if (roomName) {
+            updateData.roomName = roomName
+        }
+        if (description) {
+            updateData.description = description
+        }
+        if (gameName) {
+            updateData.gameName = gameName
+        }
+        if (rank) {
+            updateData.rankRequirement = rank
+        }
+        if (server) {
+            updateData.server = server
+        }
+        if (hasMic !== undefined) {
+            updateData.hasMic = hasMic
+        }
+        if (languages) {
+            updateData.languages = languages
+        }
+        if (maxPlayer) {
+            updateData.maxPlayer = maxPlayer
+        }
+        if (rating) {
+            updateData.minRating = rating
+        }
+
+        Object.assign(room, updateData);
+
+        const updatedRoom = await room.save();
+
+        await updatedRoom.populate('host', 'displayName rating');
+        await updatedRoom.populate('members', 'displayName');
+
+        return res.status(200).json({
             success: true,
-            message: "ยกเลิกห้องสำเร็จแล้ว",
-            deletedRoomId: room
+            message: "แก้ไขข้อมูลห้องสำเร็จแล้ว!!",
+            data: updatedRoom
         });
     } catch (error) {
-        res.status(500).json({ success: false, message: "เกิดข้อผิดพลาดในการลบห้อง" });
+        console.error("Update Room Error:", error);
+        res.status(500).json({
+            success: false,
+            message: "เกิดข้อผิดพลาดในการแก้ไขข้อมูล",
+            error: error.message // เอาไว้ดูตอนติด validation เผื่อส่งฟิลด์ไหนผิดกฎ Schema ครับ
+        });
+
     }
+}
+const kickPlayer = async (req, res) => {
+    const { roomId } = req.params;
+    if (!roomId ) return res.status(400).json({ success: false, message: "กรุณาระบุไอดีห้องด้วย" });
+
+    const { playerId } = req.body;
+    if (!playerId ) return res.status(400).json({ success: false, message: "กรุณาระบุไอดีคนที่ต้องการไล่ออกจากห้อง" });
+    
+
+    const hostId = req.user.id;
+
+    try {
+        const room = await Party.findById(roomId)
+        if (!room) return res.status(404).json({ success: false, message: "ไม่พบห้อง"})
+        // เช็คสิทธิ์โฮสต์
+        if (room.host.toString() !== hostId ) return res.status(403).json({ success: false, message: "คุณไม่มีสิทธิ์ไล่ใครออกจากห้องนี้" });
+        // ป้องกันการเตะตัวเอง
+        if (playerId === hostId) {
+            return res.status(400).json({ success: false, message: "คุณไม่สามารถเตะตัวเองออกจากห้องได้ หากต้องการปิดห้องกรุณากดปุ่มยกเลิกห้องแทน" });
+        }
+        // 🚀 สั่งดึงไอดีออกจาก members
+        const updatedRoom = await Party.findByIdAndUpdate(
+            roomId,
+            { $pull: { members: playerId } },
+            { new: true }
+        ).populate('host', 'displayName rating').populate('members', 'displayName');
+
+        if (!updatedRoom) return res.status(404).json({ success: false, message: "อัปเดตห้องไม่สำเร็จ" });
+
+        // 🔄 ระบบออโต้: ถ้าห้องเคยเต็มอยู่ พอมีที่ว่างให้เปิดสเตตัสกลับมาเป็น waiting
+        if (updatedRoom.roomStatus === 'full' && updatedRoom.members.length < updatedRoom.maxPlayer) {
+            updatedRoom.roomStatus = 'waiting';
+            await updatedRoom.save();
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "เตะผู้เล่นออกจากห้องสำเร็จแล้ว",
+            data: updatedRoom
+        });
+
+    } catch (error) {
+        console.error("Kick player Error:", error);
+        res.status(500).json({
+            success: false,
+            message: "เกิดข้อผิดพลาดในการไล่คนออกจากห้อง",
+            error: error.message // เอาไว้ดูตอนติด validation เผื่อส่งฟิลด์ไหนผิดกฎ Schema ครับ
+            });
+        }
 }
 
 const completeRoom = async (req, res) => {
@@ -249,5 +343,92 @@ const getOtherProfile = async (req, res) => {
     }
 };
 
+const joinRoom = async (req, res) => {
+    const { roomId } = req.params;
+    const playerId = req.user.id;
 
-module.exports = { getAllRoom, getSingleRoom, createRoom, cancelRoom, completeRoom, findRoom, getOtherProfile}
+    try {
+        // 🛡️ 1. เช็คฝั่ง User ก่อนว่าตัวเองว่างไหม
+        const user = await User.findById(playerId);
+        if (user.currentRoom) {
+            return res.status(400).json({ success: false, message: "คุณอยู่ในปาร์ตี้อื่นแล้ว กรุณาออกจากห้องเดิมก่อน" });
+        }
+
+        // 🛡️ 2. เช็คฝั่งห้องปาร์ตี้
+        const room = await Party.findById(roomId);
+        if (!room) return res.status(404).json({ success: false, message: "ไม่พบห้องนี้" });
+        if (room.roomStatus !== 'waiting') return res.status(400).json({ success: false, message: "ห้องนี้ไม่พร้อมใช้งานหรือเต็มแล้ว" });
+        if (room.members.length >= room.maxPlayer) return res.status(400).json({ success: false, message: "ห้องเต็มแล้ว" });
+
+        // 🚀 3. อัปเดตพร้อมกันทั้ง 2 ฝั่ง
+        // ฝั่งห้อง: ดันไอดีผู้เล่นเข้าอาร์เรย์ members
+        room.members.push(playerId);
+        
+        // ถ้าคนจอยทำให้ห้องเต็มพอดี ปรับสเตตัสเป็น full อัตโนมัติ
+        if (room.members.length === room.maxPlayer) {
+            room.roomStatus = 'full';
+        }
+        await room.save();
+
+        // ฝั่งคนเล่น: ผูกไอดีห้องเข้าที่ตัว
+        user.currentRoom = roomId;
+        await user.save();
+
+        return res.status(200).json({ success: true, message: "เข้าสู่ห้องสำเร็จ", data: room });
+
+    } catch (error) {
+        res.status(500).json({ success: false, message: "เกิดข้อผิดพลาดในการเข้าห้อง" });
+    }
+}
+
+const leaveRoom = async (req, res) => {
+    const { roomId } = req.params;
+    const playerId = req.user.id;
+
+    try {
+        const room = await Party.findById(roomId);
+        if (!room) return res.status(404).json({ success: false, message: "ไม่พบห้อง" });
+
+        //ดึงสมาชิกออกจากห้องก่อนไม่ว่าจะเป็นโฮสต์หรือสมาชิก
+        room.members = room.members.filter(memberId => memberId.toString() !== playerId);
+
+        //กรณีที่โฮสต์กดออก
+        if (room.host.toString() === playerId) {
+            //มีสมาชิกเหลืออยู่
+            if (room.members.length > 0) {
+                room.host = room.members[0];
+                room.roomStatus = 'waiting';
+            }
+            //กรณีที่ไม่มีสมาชิกเหลืออยู่
+            else {
+                    room.roomStatus = 'cancel';
+            }
+        } 
+            //กรณีที่สมาชิกทั่วไปกดออก
+        else {
+                if (room.roomStatus === 'full') {
+                    room.roomStatus = 'waiting';
+            }
+        }
+
+        const updatedRoom = await room.save();
+
+        await User.findByIdAndUpdate(playerId, { currentRoom: null });
+
+        await updatedRoom.populate('host', 'displayName rating');
+        await updatedRoom.populate('members', 'displayName');
+
+        return res.status(200).json({
+            success: true,
+            message: "ออกจากห้องสำเร็จแล้ว",
+            data: updatedRoom
+        });
+    
+    } catch (error) {
+        console.error("Leave Room Error:", error);
+        res.status(500).json({ 
+            success: false, 
+            message: "เกิดข้อผิดพลาดในการออกจากห้อง" });
+    }
+}
+module.exports = { getAllRoom, getSingleRoom, createRoom, updateRoom, kickPlayer, completeRoom, findRoom, getOtherProfile, joinRoom, leaveRoom }

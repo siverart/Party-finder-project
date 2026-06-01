@@ -68,6 +68,11 @@ const userScheme = new mongoose.Schema({
         type: String,
         default: "http://localhost:5000/uploads/default-avatar.png"
     },
+    currentRoom: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Party',
+        default: null // 🟢 ถ้าเป็น null แปลว่ายังไม่มีห้องอยู่ / ว่างงาน
+    },
     activationToken: String,
     activationExpires: Date,
     resetPasswordToken: String,
@@ -75,6 +80,7 @@ const userScheme = new mongoose.Schema({
 }, {
     timestamps: true
 });
+    
 
 userScheme.pre('save', async function() {
     if (!this.displayName) {
