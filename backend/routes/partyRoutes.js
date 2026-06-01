@@ -14,6 +14,7 @@ router.patch('/update-room/:roomId', auth, partyControllers.updateRoom);
 router.post('/kick-player/:roomId', auth, partyControllers.kickPlayer);
 router.post('/join-room/:roomId', auth, partyControllers.joinRoom);
 router.post('/leave-room/:roomId', auth, partyControllers.leaveRoom)
+router.post('/change-host/:roomId', auth, partyControllers.changeHost)
 
 
 
