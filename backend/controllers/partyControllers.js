@@ -48,7 +48,11 @@ const getSingleRoom = async (req, res) => {
 const createRoom = async (req, res) => {
     try{
         const hostId = req.user.id;
-        
+        const host = await User.findById(hostId).populate('currentRoom', 'roomStatus');
+        if (!host) return res.status(404).json({
+            success: false,
+            message: "ไม่พบข้อมูลผู้ใช้"
+        })
         // 🎯 1. เช็คก่อนว่า โฮสต์คนนี้มีห้องที่ยังใช้งานอยู่ ('waiting' หรือ 'full') ในระบบแล้วหรือยัง
         const existingRoom = await Party.findOne({
             host: hostId,
@@ -62,6 +66,13 @@ const createRoom = async (req, res) => {
                 message: "คุณมีห้องที่กำลังใช้งานอยู่ในระบบแล้ว ไม่สามารถสร้างห้องซ้ำได้"
             });
         }
+        // เช็คว่าเค้าผูกติดกับห้องที่มีสถานะ complete กับ cancel อยู่ก่อนไหม ถ้ามีก็จะปรับให้เป็น null ก่อนจะสร้างห้องใหม่
+        if (host.currentRoom && ['complete', 'cancel'].includes(host.currentRoom.roomStatus)) {
+            host.currentRoom = null;
+            await host.save();
+        }
+
+        
         const { 
                 roomName, 
                 description, 
@@ -121,7 +132,7 @@ const updateRoom = async (req, res) => {
 
         if (hostId !== room.host.toString()) return res.status(403).json({ success: false, message:"คุณไม่มีสิทธิ์แก้ไขห้องนี้"})
 
-        const { roomName, description, gameName, rank, server, hasMic, languages, maxPlayer, rating } = req.body;
+        const { roomName, description, gameName, rank, server, hasMic, languages, maxPlayer, rating, playTime } = req.body;
         
         let updateData = {}
 
@@ -152,6 +163,9 @@ const updateRoom = async (req, res) => {
         if (rating) {
             updateData.minRating = rating
         }
+        if (playTime) {
+            updateData.playTime = playTime
+        }
 
         Object.assign(room, updateData);
 
@@ -175,7 +189,67 @@ const updateRoom = async (req, res) => {
 
     }
 }
+const changeHost = async (req, res) => {
+    const { roomId } = req.params;
+    const { playerId } = req.body;
+    const originalHostId = req.user.id;
+
+    if (!roomId) return res.status(400).json({
+        success: false,
+        message: "กรุณาระบุไอดีห้องด้วย"
+    }) 
+    if (!playerId) return res.status(400).json({
+        success: false,
+        message: "กรุณาระบุไอดีคนที่ต้องการมอบตำแหน่งโฮสต์ด้วย"
+    })  
+
+    
+    try {
+        
+        const room = await Party.findById(roomId)
+        if (!room) return res.status(404).json({ 
+            success: false, 
+            message: "ไม่พบห้อง"
+        });
+
+        if (originalHostId !== room.host.toString()) return res.status(403).json({ 
+            success: false, 
+            message: "คุณไม่มีสิทธิ์เปลี่ยนหัวหน้าห้อง"
+        });
+
+        if (playerId === originalHostId) return res.status(400).json({ 
+            success: false, 
+            message: "คุณเป็นหัวหน้าห้องนี้อยู่แล้ว"
+        });
+
+        if (!room.members.includes(playerId)){
+            return res.status(400).json({
+                success: false,
+                message: "ผู้เล่นคนนี้ไม่ได้อยู่ในห้องปาร์ตี้ของคุณ ไม่สามารถมอบตำแหน่งโฮสต์ให้ได้"
+            });
+        }
+        room.host = playerId;
+        const savedRoom = await room.save();
+        await savedRoom.populate('host', 'displayName rating');
+        await savedRoom.populate('members', 'displayName');
+
+        return res.status(200).json({
+            success: true,
+            message: "เปลี่ยนหัวหน้าห้องสำเร็จแล้ว",
+            data: savedRoom
+        })
+
+    } catch (error) {
+        console.error("Change Host Error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "เกิดข้อผิดพลาดในการเปลี่ยนหัวหน้าห้อง",
+        })
+    }
+}
+
 const kickPlayer = async (req, res) => {
+
     const { roomId } = req.params;
     if (!roomId ) return res.status(400).json({ success: false, message: "กรุณาระบุไอดีห้องด้วย" });
 
@@ -189,30 +263,31 @@ const kickPlayer = async (req, res) => {
         const room = await Party.findById(roomId)
         if (!room) return res.status(404).json({ success: false, message: "ไม่พบห้อง"})
         // เช็คสิทธิ์โฮสต์
-        if (room.host.toString() !== hostId ) return res.status(403).json({ success: false, message: "คุณไม่มีสิทธิ์ไล่ใครออกจากห้องนี้" });
+        if ( room.host.toString() !== hostId ) return res.status(403).json({ success: false, message: "คุณไม่มีสิทธิ์ไล่ใครออกจากห้องนี้" });
         // ป้องกันการเตะตัวเอง
-        if (playerId === hostId) {
+        if ( playerId === hostId ) {
             return res.status(400).json({ success: false, message: "คุณไม่สามารถเตะตัวเองออกจากห้องได้ หากต้องการปิดห้องกรุณากดปุ่มยกเลิกห้องแทน" });
         }
         // 🚀 สั่งดึงไอดีออกจาก members
-        const updatedRoom = await Party.findByIdAndUpdate(
-            roomId,
-            { $pull: { members: playerId } },
-            { new: true }
-        ).populate('host', 'displayName rating').populate('members', 'displayName');
+        room.members = room.members.filter(memberId => memberId.toString() !== playerId);
 
-        if (!updatedRoom) return res.status(404).json({ success: false, message: "อัปเดตห้องไม่สำเร็จ" });
+        
 
         // 🔄 ระบบออโต้: ถ้าห้องเคยเต็มอยู่ พอมีที่ว่างให้เปิดสเตตัสกลับมาเป็น waiting
-        if (updatedRoom.roomStatus === 'full' && updatedRoom.members.length < updatedRoom.maxPlayer) {
-            updatedRoom.roomStatus = 'waiting';
-            await updatedRoom.save();
+        if (room.roomStatus === 'full' && room.members.length < room.maxPlayer) {
+        room.roomStatus = 'waiting';
         }
+
+        const savedRoom = await room.save();
+        //แก้ห้องปัจจุบันของคนที่โดนเตะให้เป็นว่าไม่อยู่ในห้องไหนเลย
+        await User.findByIdAndUpdate(playerId, { currentRoom: null });
+        await savedRoom.populate('host', 'displayName rating');
+        await savedRoom.populate('members', 'displayName');
 
         return res.status(200).json({
             success: true,
             message: "เตะผู้เล่นออกจากห้องสำเร็จแล้ว",
-            data: updatedRoom
+            data: savedRoom
         });
 
     } catch (error) {
@@ -257,8 +332,9 @@ const completeRoom = async (req, res) => {
 const findRoom = async (req, res) => {
     try {
         const { gameName, rank, server, hasMic, language, playTimeStart } = req.body;
-        const user = await User.findById(req.user.id)
+        const user = await User.findById(req.user.id).populate('currentRoom', 'roomStatus')
 
+        //สร้าง querycondition 
         let queryConditions = {};
 
         if (user && user.rating) {
@@ -299,13 +375,19 @@ const findRoom = async (req, res) => {
 
         queryConditions.roomStatus = 'waiting';
 
+        //หาห้องที่ตรงเงื่อนไข
         const matchedRoom = await Party.find(queryConditions)
         .populate('host', 'displayName rating')
         .populate('members', 'displayName');
 
         if (!matchedRoom) return res.status(404).json({ success: false, message: "ไม่พบห้องที่ตรงตามเงื่อนไข"})
 
-        res.status(200).json({ success: true, count: matchedRoom.length, data: matchedRoom});
+        
+        res.status(200).json({ 
+            success: true, 
+            count: matchedRoom.length, 
+            data: matchedRoom
+        });
     } catch (error) {
         console.error("❌ Matchmaking Error Details:", error); // 🌟 บรรทัดนี้จะช่วยชีวิตเรา! มันจะฟ้องเลยว่าบรรทัดไหนพัง
         res.status(500).json({ message: "ระบบ Matchmaking ขัดข้อง" });
@@ -348,11 +430,18 @@ const joinRoom = async (req, res) => {
     const playerId = req.user.id;
 
     try {
+    
         // 🛡️ 1. เช็คฝั่ง User ก่อนว่าตัวเองว่างไหม
-        const user = await User.findById(playerId);
+        const user = await User.findById(playerId).populate('currentRoom', 'roomStatus');
+        //เคยอยู่ในห้องที่จบไปแล้ว
+        if (user.currentRoom && ['complete', 'cancel'].includes(user.currentRoom.roomStatus)){
+            user.currentRoom = null
+        }
+        //ตอนนี้มีห้องอยู่แล้ว
         if (user.currentRoom) {
             return res.status(400).json({ success: false, message: "คุณอยู่ในปาร์ตี้อื่นแล้ว กรุณาออกจากห้องเดิมก่อน" });
         }
+
 
         // 🛡️ 2. เช็คฝั่งห้องปาร์ตี้
         const room = await Party.findById(roomId);
@@ -374,7 +463,10 @@ const joinRoom = async (req, res) => {
         user.currentRoom = roomId;
         await user.save();
 
-        return res.status(200).json({ success: true, message: "เข้าสู่ห้องสำเร็จ", data: room });
+        return res.status(200).json({ 
+            success: true, 
+            message: "เข้าสู่ห้องสำเร็จ", 
+            data: room });
 
     } catch (error) {
         res.status(500).json({ success: false, message: "เกิดข้อผิดพลาดในการเข้าห้อง" });
@@ -394,7 +486,7 @@ const leaveRoom = async (req, res) => {
 
         //กรณีที่โฮสต์กดออก
         if (room.host.toString() === playerId) {
-            //มีสมาชิกเหลืออยู่
+            //มีสมาชิกเหลืออยู่ ส่งโฮสต์ต่อไปที่คนถัดไป
             if (room.members.length > 0) {
                 room.host = room.members[0];
                 room.roomStatus = 'waiting';
@@ -431,4 +523,4 @@ const leaveRoom = async (req, res) => {
             message: "เกิดข้อผิดพลาดในการออกจากห้อง" });
     }
 }
-module.exports = { getAllRoom, getSingleRoom, createRoom, updateRoom, kickPlayer, completeRoom, findRoom, getOtherProfile, joinRoom, leaveRoom }
+module.exports = { getAllRoom, getSingleRoom, createRoom, updateRoom, kickPlayer, completeRoom, findRoom, getOtherProfile, joinRoom, leaveRoom, changeHost }
