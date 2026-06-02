@@ -19,13 +19,6 @@ function Profile(){
     const [ isContactModalOpen, setIsContactModalOpen ] = useState(false);
     const navigate = useNavigate();
 
-    console.log("=== เช็ค State ปัจจุบัน ===");
-    console.log("displayName:", displayName);
-    console.log("description:", description);
-    console.log("contacts:", contacts);
-    console.log("tags:", tags);
-    console.log("rating:", rating)
-
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token) {
