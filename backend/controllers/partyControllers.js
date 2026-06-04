@@ -81,7 +81,7 @@ const createRoom = async (req, res) => {
                 rank,
                 server,
                 hasMic,
-                language,
+                languages,
                 minRating,
                 maxPlayer,
                 playTime
@@ -94,7 +94,7 @@ const createRoom = async (req, res) => {
                 rankRequirement: rank,
                 server: server,
                 hasMic: hasMic,
-                languages: language,
+                languages: languages,
                 minRating: minRating,
                 maxPlayer: maxPlayer,
                 playTime: playTime,
@@ -332,7 +332,7 @@ const completeRoom = async (req, res) => {
 
 const findRoom = async (req, res) => {
     try {
-        const { gameName, rank, server, hasMic, language, playTimeStart } = req.body;
+        const { gameName, rank, server, hasMic, languages, playTimeStart } = req.body;
         const user = await User.findById(req.user.id).populate('currentRoom', 'roomStatus')
 
         //สร้าง querycondition 
@@ -366,8 +366,8 @@ const findRoom = async (req, res) => {
             queryConditions.hasMic = hasMic
         }
 
-        if (language) {
-            queryConditions.languages = { $in: language };
+        if (languages) {
+            queryConditions.languages = { $in: languages };
         }
 
         if (playTimeStart) {
