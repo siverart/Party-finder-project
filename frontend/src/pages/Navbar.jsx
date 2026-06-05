@@ -21,18 +21,18 @@ function Navbar() {
             color: '#fff',
             alignItems: 'center'
         }}>
-            <h2 style={{ fontFamily: " 'Kanit' , sans-serif ",color: '#1a1a1a'}}>Game-Finder-App</h2>
+            <Link to="/lobby" style={{ fontFamily: " 'Kanit' , sans-serif ",color: 'rgb(49, 51, 58)', textDecoration: 'none', fontSize: "20px", fontWeight: "400"}}>Game-Finder-App</Link>
 
-            <div style={{ fontFamily: " 'Kanit' , sans-serif ",color: '#1a1a1a' ,display: 'flex', gap: '20px', alignItems: 'center'}}>
+            <div style={{ fontFamily: " 'Kanit' , sans-serif ",color: 'rgb(49, 51, 58)' ,display: 'flex', gap: '20px', alignItems: 'center'}}>
                 {/*ตรวจสอบ token เพื่อเช็คการ login*/}
                 {token ? (
                     <>
                         <span>สวัสดี, { username || 'ผู้ใช้งาน' } 👋</span>
-                        <Link to="/profile" style= {{ color : '#1a1a1a', textDecoration: 'none' }}>Profile</Link>
+                        <Link to="/profile" style= {{ color : 'rgb(49, 51, 58)', textDecoration: 'none' }}>Profile</Link>
 
                         <button
                             onClick={handleLogout}
-                            style={{ fontFamily: " 'Kanit' , sans-serif ",background: 'rgb(149, 73, 73)',fontWeight : 'bold', color: 'rgb(26, 26, 26)', border: 'none', padding: '5px 10px', cursor: 'pointer', borderRadius: '4px' }}
+                            style={{ fontFamily: " 'Kanit' , sans-serif ",background: 'rgb(149, 73, 73)',fontWeight : 'bold', color: 'rgb(41, 40, 40)', border: 'none', padding: '5px 10px', cursor: 'pointer', borderRadius: '4px' }}
                             >
                             Logout
                             </button>
@@ -43,12 +43,12 @@ function Navbar() {
                     <>
                         <Link to="/login" style= {{ 
                             fontFamily: " 'Kanit' , sans-serif ",
-                            color: '#1a1a1a',
+                            color: 'rgb(49, 51, 58)',
                             textDecoration:'none'
                             }}>Login</Link>
                         <Link to="/register" style={{ 
                             fontFamily: " 'Kanit' , sans-serif ",
-                            color: '#1a1a1a',
+                            color: 'rgb(205, 215, 241)',
                             textDecoration:'none'
                             }}>Register</Link>
                     </>

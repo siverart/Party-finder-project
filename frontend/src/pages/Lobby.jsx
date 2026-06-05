@@ -197,11 +197,76 @@ function Lobby(){
         }
     }
     return (
-        <div>
+        <div style={containerStyle}>
             
+            {/* 👑 โรงงาน .map() เริ่มทำงานตรงนี้ */}
+            {allRoom.map((room) => {
+                // 🤔 แอบคำนวณรูปภาพพื้นหลังก่อนส่งออก JSX (ลอจิกที่เราคุยกันเมื่อกี้)
+                const currentBg = gameBackgrounds[room.gameName] || defaultBackground;
+                
+                // ปั้นสไตล์แยกเฉพาะของการ์ดใบนี้
+                const finalCardStyle = {
+                    ...roomCardStyle,
+                    backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.75)), url(${currentBg})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    color: '#fff'
+                };
+    
+                // 🎯 สั่ง Return พ่นแท็ก JSX ออกไปสู้สายตาประชาชน
+                return (
+                    <div key={room._id} style={finalCardStyle}>
+                        <p>📝 ชื่อห้อง: {room.roomName}</p>
+                        <p>🎮 เกม: {room.gameName}</p>
+                        <p>👥 สมาชิก: {room.members?.length}/{room.maxPlayer}</p>
+                        
+                        {/* ปุ่มกดที่จะพาเราเปลี่ยนหน้าไปยังห้องนั้น ๆ พร้อมแนบ ID ไปด้วย */}
+                        <button onClick={() => navigate(`/room/${room._id}`)}>
+                            เข้าร่วมปาร์ตี้
+                        </button>
+                    </div>
+                );
+            })}
+            {/* 👑 สิ้นสุดโรงงาน .map() */}
+    
         </div>
-    )
+    );
 }
 
+const containerStyle = {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: '100vh',
+    backgroundColor: 'rgb(240, 227, 221)', // ใช้สีพื้นหลังครีมละมุนแบบเดียวกับหน้า Login เป๊ะๆ
+    padding: '40px 50px',
+    fontFamily: "'Kanit', sans-serif",
+    gap: '10px'
+};
+const roomCardStyle = {
+    display: 'flex',
+    flexDirection:'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width:'100%',
+    maxWidth: '800px',
+    backgroundColor: 'rgb(212, 232, 236)',
+    borderRadius: '24px',
+    boxShadow: '0 10px 40px rgba(160, 140, 130, 0.21)',
+    padding: '30px 20px',
+    gap:'10px',
+    borderLeft: '4px solid rgb(224, 116, 102)'
+}
+// 🖼️ สมุดจับคู่รูปภาพพื้นหลังเกม (คีย์ฝั่งซ้ายต้องตรงกับชื่อเกมใน DB เป๊ะ ๆ นะครับ)
+const gameBackgrounds = {
+    "League of Legends": "https://images.alphacoders.com/134/1344400.jpeg", 
+    "Path of Exile 2": "https://images.alphacoders.com/133/1338874.png",
+    "Enshrouded": "https://images.shacknews.com/assets/article/2024/01/24/enshrouded-review-graphics_feature.jpg",
+    "Valorant": "https://images.alphacoders.com/114/1143521.jpg"
+};
+
+// 💡 ทำรูปภาพ Default สำรองไว้ด้วย เผื่อกรณีหาชื่อเกมไม่เจอ หรือพิมพ์ชื่อเกมใหม่เข้ามา
+const defaultBackground = "https://images.alphacoders.com/132/1329910.jpeg";
 
 export default Lobby;
