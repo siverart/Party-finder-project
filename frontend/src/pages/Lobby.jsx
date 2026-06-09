@@ -284,7 +284,7 @@ const containerStyle = {
     alignItems: 'center',
     minHeight: '100vh',
     backgroundImage: `
-        linear-gradient(135deg, rgba(173, 205, 235, 0.8) 0%, rgba(243, 207, 192, 0.8) 100%), 
+        linear-gradient(135deg, rgba(181, 218, 253, 0.8) 0%, rgba(243, 207, 192, 0.8) 100%), 
         url('/images/bg.avif')`,
 
     backgroundSize: 'cover',

@@ -17,7 +17,7 @@ function Navbar() {
             display: 'flex',
             justifyContent: 'space-between',
             padding: '15px 30px',
-            backgroundImage : 'linear-gradient(rgb(236, 181, 159) 0%, rgb(223, 128, 128) 100%)',
+            backgroundImage : 'linear-gradient(rgb(231, 163, 146) 0%, rgb(207, 119, 119) 100%)',
             color: '#fff',
             alignItems: 'center',
             boxShadow: '0px 5px 30px rgba(0, 0, 0, 0.14)',
