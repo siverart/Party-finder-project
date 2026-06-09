@@ -17,9 +17,15 @@ function Navbar() {
             display: 'flex',
             justifyContent: 'space-between',
             padding: '15px 30px',
-            background: 'rgb(114, 145, 143)',
+            backgroundImage : 'linear-gradient(rgb(236, 181, 159) 0%, rgb(223, 128, 128) 100%)',
             color: '#fff',
-            alignItems: 'center'
+            alignItems: 'center',
+            boxShadow: '0px 5px 30px rgba(0, 0, 0, 0.14)',
+
+            position: 'relative',
+            zIndex: 10,
+
+
         }}>
             <Link to="/lobby" style={{ fontFamily: " 'Kanit' , sans-serif ",color: 'rgb(49, 51, 58)', textDecoration: 'none', fontSize: "20px", fontWeight: "400"}}>Game-Finder-App</Link>
 
@@ -32,7 +38,7 @@ function Navbar() {
 
                         <button
                             onClick={handleLogout}
-                            style={{ fontFamily: " 'Kanit' , sans-serif ",background: 'rgb(149, 73, 73)',fontWeight : 'bold', color: 'rgb(41, 40, 40)', border: 'none', padding: '5px 10px', cursor: 'pointer', borderRadius: '4px' }}
+                            style={{ fontFamily: " 'Kanit' , sans-serif ",background: 'rgb(214, 67, 91)',fontWeight : 'bold', color: 'rgb(227, 207, 230)', border: 'none', padding: '5px 10px', cursor: 'pointer', borderRadius: '4px' }}
                             >
                             Logout
                             </button>
