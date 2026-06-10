@@ -1,3 +1,4 @@
+{/* ปุ่ม "หาห้อง" หน้า lobby*/}
 .findRoomButton {
     position: relative;
     color: #29414b;
@@ -59,3 +60,111 @@
     background-color: rgb(206, 127, 113);
 }
 
+{/* ปุ่มของ Modal เช่น ปุ่มค้นหา ปุ่มยกเลิก*/}
+.findRoomModalButton {
+    position: relative;
+    color : rgb(255, 255, 255);
+    background-color: transparent;
+    border-radius: 35px;
+    padding : 10px 20px;
+    border : none;
+    cursor: pointer;
+    z-index: 1;
+    transition: all 0.1s ease-in-out;
+    font-family:'Kanit' , sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.15em
+}
+
+.findRoomModalButton::before{
+    content:"";
+    position: absolute;
+
+    top: 0px; 
+    left: 0px; 
+    right: 0px; 
+    bottom: 0px;
+
+    background-color: rgb(233, 134, 121);
+    z-index: -1;
+    border-radius: inherit;
+    transition: all 0.1s ease-in-out;
+
+
+    
+    
+}
+.findRoomModalButton::after{
+    content: "";
+    position: absolute;
+    background-color: rgb(199, 109, 74);
+
+    top: 0px; 
+    left: 0px; 
+    right: 0px; 
+    bottom: -3px;
+    transition: all 0.1s ease-in-out;
+
+    border-radius: inherit;
+    box-shadow: 0px 5px 16px rgba(36, 36, 36, 0.377);
+    z-index: -2;
+}
+
+.findRoomModalButton:hover {
+    transform : translateY(2px);
+}
+
+.findRoomModalButton:hover::after{
+    box-shadow: 0px 4px 8px rgba(36, 36, 36, 0.459);
+}
+
+{/* กล่องครอบปุ่ม ค้นหา กับ ยกเลิก ใน findRoomModal*/}
+.findRoomButtonBlockStyle {
+    display : flex;
+    justify-content: center;
+    gap: 60px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    
+    
+}
+
+{/* แทนกล่องดำของ <select> */}
+
+.selectModalStyle {
+    margin-left: 15px ;
+    width: 300px;
+    
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 10px;
+    
+    border: 1px solid #e7d7d1;
+    border-radius: 14px;
+    
+    background-color: #fff;
+    color: #7a7a7a;
+    
+    font-size: 14px;
+
+    outline: none;
+    font-family: 'kanit';
+    transition: all .25s ease;
+}
+
+.selectModalStyle:focus {
+    border-color: #d9b8ac;
+
+    box-shadow:
+        0 0 0 4px rgba(217,184,172,.15);
+}
+
+
+.findRoomEachFormStyle {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    align-items: center;
+    padding: 0px 15px;
+    
+}

@@ -34,7 +34,7 @@ function Navbar() {
                 {token ? (
                     <>
                         <span>สวัสดี, { username || 'ผู้ใช้งาน' } 👋</span>
-                        <Link to="/profile" style= {{ color : 'rgb(49, 51, 58)', textDecoration: 'none' }}>Profile</Link>
+                        <Link to="/profile" style= {{ color : 'rgb(49, 51, 58)', textDecoration: 'none' }}>โปรไฟล์</Link>
 
                         <button
                             onClick={handleLogout}

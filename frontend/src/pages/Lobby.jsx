@@ -3,6 +3,74 @@ import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import '../button.css';
 
+const GAME_RANKS = {
+    "LOL": [
+        { id: 1, name: "Iron4"},
+        { id: 2, name: "Iron3"},
+        { id: 3, name: "Iron2"},
+        { id: 4, name: "Iron1"},
+        { id: 5, name: "Bronze4"},
+        { id: 6, name: "Bronze3"},
+        { id: 7, name: "Bronze2"},
+        { id: 8, name: "Bronze1"},
+        { id: 9, name: "Silver4"},
+        { id: 10, name: "Silver3"},
+        { id: 11, name: "Silver2"},
+        { id: 12, name: "Silver1"},
+        { id: 13, name: "Gold4"},
+        { id: 14, name: "Gold3"},
+        { id: 15, name: "Gold2"},
+        { id: 16, name: "Gold1"},
+        { id: 17, name: "Platinum4"},
+        { id: 18, name: "Platinum3"},
+        { id: 19, name: "Platinum2"},
+        { id: 20, name: "Platinum1"},
+        { id: 21, name: "Emerald4"},
+        { id: 22, name: "Emerald3"},
+        { id: 23, name: "Emerald2"},
+        { id: 24, name: "Emerald1"},
+        { id: 25, name: "Diamond4"},
+        { id: 26, name: "Diamond3"},
+        { id: 27, name: "Diamond2"},
+        { id: 28, name: "Diamond1"},
+        { id: 29, name: "Master4"},
+        { id: 30, name: "Master3"},
+        { id: 31, name: "Master2"},
+        { id: 32, name: "Master1"},
+        { id: 33, name: "Grandmaster4"},
+        { id: 34, name: "Grandmaster3"},
+        { id: 35, name: "Grandmaster2"},
+        { id: 36, name: "Grandmaster1"},
+        { id: 37, name: "Challenger"}
+    ],
+    "Varolant" : [
+        { id: 1, name: "Iron1"},
+        { id: 2, name: "Iron2"},
+        { id: 3, name: "Iron3"},
+        { id: 4, name: "Bronze1"},
+        { id: 5, name: "Bronze2"},
+        { id: 6, name: "Bronze3"},
+        { id: 7, name: "Silver1"},
+        { id: 8, name: "Silver2"},
+        { id: 9, name: "Silver3"},
+        { id: 10, name: "Gold1"},
+        { id: 11, name: "Gold2"},
+        { id: 12, name: "Gold3"},
+        { id: 13, name: "Platinum1"},
+        { id: 14, name: "Platinum2"},
+        { id: 15, name: "Platinum3"},
+        { id: 16, name: "Diamond1"},
+        { id: 17, name: "Diamond2"},
+        { id: 18, name: "Diamond3"},
+        { id: 19, name: "Ascendant1"},
+        { id: 20, name: "Ascendant2"},
+        { id: 21, name: "Ascendant3"},
+        { id: 22, name: "Immortal1"},
+        { id: 23, name: "Immortal2"},
+        { id: 24, name: "Immortal3"},
+        { id: 25, name: "Radiant"}
+    ]
+}
 function Lobby(){
     const [ allRoom, setAllRoom ] = useState([])
     const [ singleRoom, setSingleRoom ] = useState({})
@@ -17,7 +85,7 @@ function Lobby(){
     const [ gameName, setGameName ] = useState("")
     const [ rank, setRank ] = useState(0)
     const [ server, setServer ] = useState("")
-    const [ hasMic, setHasMic ] = useState(false)
+    const [ hasMic, setHasMic ] = useState("")
     const [ minRating, setMinRating ] = useState(0)
     const [ maxPlayer, setMaxPlayer ] = useState(0)
     const [ playTimeStart, setPlayTimeStart ] = useState("")
@@ -110,7 +178,7 @@ function Lobby(){
                 setGameName("")
                 setRank(0)
                 setServer("")
-                setHasMic(false)
+                setHasMic("")
                 setLanguages([])
                 setMinRating(0)
                 setMaxPlayer(0)
@@ -152,7 +220,7 @@ function Lobby(){
             setGameName("")
             setRank(0)
             setServer("")
-            setHasMic(false)
+            setHasMic("")
             setLanguages([])
             setPlayTimeStart("")
 
@@ -202,14 +270,16 @@ function Lobby(){
         setGameName("")
         setRank(0)
         setServer("")
-        setHasMic(false)
+        setHasMic("")
         setLanguages([])
         setPlayTimeStart("")
     }
+
+    {/* ส่วนแสดงผล */}
     return (
         <div style={containerStyle}>
             
-            {/* 👑 โรงงาน .map() เริ่มทำงานตรงนี้ */}
+            {/* เริ่ม .map() allRoom */}
             {allRoom.map((room) => {
                 // 🤔 แอบคำนวณรูปภาพพื้นหลังก่อนส่งออก JSX (ลอจิกที่เราคุยกันเมื่อกี้)
                 const currentBg = gameBackgrounds[room.gameName] || defaultBackground;
@@ -223,7 +293,7 @@ function Lobby(){
                     color: '#fff'
                 };
     
-                // 🎯 สั่ง Return พ่นแท็ก JSX ออกไปสู้สายตาประชาชน
+                // return ของ .map()
                 return (
                     
                     <div key={room._id} style={finalCardStyle}>
@@ -238,40 +308,109 @@ function Lobby(){
                     </div>
                 );
             })}
-            {/* 👑 สิ้นสุดโรงงาน .map() */}
+            {/* จบส่วน .map() allRoom */}
+
+            {/* ส่วนปุ่มหาห้อง */}
             <div style={{padding:"30px 20px"}}>
                 <button onClick={() => setIsFindRoomModalOpen(true)} className="findRoomButton">
                     หาห้อง
                 </button>
             </div>
-            
+
+            {/*  modal สำหรับกรอกหาห้อง */}
             {isFindRoomModalOpen && (
-                <div style={modalOverlayStyle}>
-                    <div style={{backgroundColor:"white", padding: "15px 15px", borderRadius: "18px"}}>
-                        <h3>กรอกข้อมูลเพื่อหาห้อง</h3>
-                        <div>
+                <div onClick={handleCloseFindRoomModal} style={modalOverlayStyle}>
+                    <div onClick={(e) => e.stopPropagation()} style={modalCardStyle}>
+                        <p style={titleStyle}>กรอกข้อมูลเพื่อหาห้อง</p>
+                        <div className="findRoomEachFormStyle">
+                            {/* กรอกชื่อเกม */}
                             <label htmlFor="game-select"> 🕹️ เลือกเกม : </label>
                                 <select
+                                    id="game-select"
                                     value={gameName}
+                                    onChange={(e) => setGameName(e.target.value)}
+                                    className="selectModalStyle"
                                 >
                                     <option value="">-- กรุณาเลือกเกม --</option>
                                     <option value="LOL">League of Legends</option>
                                     <option value="POE2">Path of Exile 2</option>
                                     <option value="Varolant">Varolant</option>
                                 </select>
-                            <label></label>
                         </div>
-                        <div>
-                            <button onClick={handleFindRoom}>ค้นหา</button>
-                            <button onClick={handleCloseFindRoomModal}>ยกเลิก</button>
+
+                        {/* เงื่อนไขว่าเกมไหนมีแรงค์จึงจะให้กรอกแรงค์ */}
+                        {(gameName === "LOL" || gameName === "Varolant") && (
+                            <div className="findRoomEachFormStyle">
+                                <label htmlFor="rank-select"> 🏆 เลือกแรงค์ : </label>
+                                <select
+                                    id="rank-select"
+                                    value={String(rank)}
+                                    onChange={(e) => setRank(Number(e.target.value))}
+                                    className="selectModalStyle"
+                                >
+                                    <option value="0">-- เลือกแรงค์ --</option>
+                                    {GAME_RANKS[gameName]?.map((r) =>(
+                                        <option key={r.id} value={r.id}>
+                                            {r.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
+                        
+
+                        <div className="findRoomEachFormStyle">
+                            {/* server */}
+                            <label htmlFor="server-select"> 🌍 เลือกเซิร์ฟเวอร์ :</label>
+                                <select
+                                id="server-select"
+                                value={server}
+                                onChange={(e) => setServer(e.target.value)}
+                                className="selectModalStyle"
+                                >
+                                    <option value="">-- กรุณาเลือกเซิร์ฟเวอร์ --</option>
+                                    <option value="SEA">Southeast Asia</option>
+                                    <option value="EU">Europe</option>
+                                    <option value="NA">North America</option>
+                                    <option value="OCE">Oceania</option>
+                                    <option value="LATAM">Latin America</option>
+                                    <option value="MEA">Middle East & Africa</option>
+
+                                </select>
+                        </div>
+
+                        <div className="findRoomEachFormStyle">
+                            {/* hasMic */}
+                            <label htmlFor="hasMic-input"> 🎙️ มีไมค์ : </label>
+                            <select
+                                id="hasMic-input"
+                                value={String(hasMic)}
+                                onChange={(e) => setHasMic(e.target.value === "true")}
+                                className="selectModalStyle"
+                            >
+                                <option value="">-- กรุณาเลือก --</option>
+                                <option value="true"> มีไมค์ </option>
+                                <option value="false"> ไม่มีไมค์ </option>    
+                            </select>
+                        </div>    
+                            
+                        <div className="findRoomEachFormStyle">
+                            {/* languages */}
+                            <label> 🗣️ ภาษา : </label>
+                        </div>
+
+                        <div className="findRoomEachFormStyle">
+                            {/* playTimeStart */}
+                            <label> 🕘 เวลาเริ่มเล่น : </label>
+                        </div>
+                            
+                        <div className="findRoomButtonBlockStyle">
+                            <button className="findRoomModalButton" onClick={handleFindRoom}>ค้นหา</button>
+                            <button className="findRoomModalButton" onClick={handleCloseFindRoomModal}>ยกเลิก</button>
                         </div>
                     </div>
-                    
                 </div>
-
-
             )}
-
         </div>
         
     );
@@ -308,9 +447,7 @@ const roomCardStyle = {
     gap:'10px',
     borderLeft: '6px solid rgb(219, 121, 108)'
 }
-const testModernButton = {
 
-}
 // 🔒 สไตล์กล่องลอยกลางอากาศ (Modal CSS)
 const modalOverlayStyle = {
     position: 'fixed',
@@ -321,6 +458,25 @@ const modalOverlayStyle = {
     alignItems: 'center',
     zIndex: 9999 // มั่นใจได้ว่าจะไม่มีอะไรลอยทับหน้าต่างนี้
 };
+const modalCardStyle = {
+    backgroundImage:"linear-gradient(135deg, rgb(161, 210, 255) 0%, rgb(245, 245, 245) 50%, rgb(250, 186, 158) 100%)", 
+    padding: "20px 15px", 
+    borderRadius: "25px",
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    gap: '10px',
+    width: '800px'
+};
+
+const titleStyle ={
+    color : 'rgb(42, 48, 77)',
+    fontSize: '20px',
+    fontWeight: '600',
+    marginBottom: '13px',
+    marginTop: '8px'
+}
+
 
 // 🖼️ สมุดจับคู่รูปภาพพื้นหลังเกม (คีย์ฝั่งซ้ายต้องตรงกับชื่อเกมใน DB เป๊ะ ๆ นะครับ)
 const gameBackgrounds = {

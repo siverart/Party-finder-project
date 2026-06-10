@@ -353,8 +353,8 @@ const findRoom = async (req, res) => {
 
         if (rank) {
             queryConditions.rankRequirement = {
-                $gte: rank - 2,
-                $lte: rank + 2
+                $gte: rank - 4,
+                $lte: rank + 4
             }
         }
 
