@@ -153,10 +153,9 @@
 }
 
 .selectModalStyle:focus {
-    border-color: #d9b8ac;
+    border-color: #df7777;
 
-    box-shadow:
-        0 0 0 4px rgba(217,184,172,.15);
+    box-shadow: 0 0 8px rgba(223, 119, 119, 0.2);
 }
 
 
@@ -166,5 +165,31 @@
     justify-content: space-evenly;
     align-items: center;
     padding: 0px 15px;
+    color: rgb(83, 91, 119);
     
+}
+
+.calenderStyle {
+    margin-left: 15px ;
+    width: 300px;
+    
+    box-sizing: border-box;
+    padding: 10px 15px;
+    
+    border: 1px solid #e7d7d1;
+    border-radius: 14px;
+    
+    background-color: #31312f;
+    color: #d4d2d2;
+    
+    font-size: 14px;
+
+    outline: none;
+    font-family: 'kanit';
+    transition: all .25s ease;
+}
+
+.calenderStyle:focus {
+    border-color: #df7777; /* สีพีช/ชมพูเข้าเซ็ตกับปุ่มและเว็บของคุณโอ๊ต */
+    box-shadow: 0 0 8px rgba(223, 119, 119, 0.2);
 }

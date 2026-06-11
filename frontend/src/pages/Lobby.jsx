@@ -195,6 +195,8 @@ function Lobby(){
     const handleFindRoom = async(e) => {
         e.preventDefault();
         if ( !gameName || !playTimeStart ) return;
+
+        const isoDateTime = playTimeStart ? new Date(playTimeStart).toISOString() : null;
         //body
         const body = {
             gameName,
@@ -202,7 +204,7 @@ function Lobby(){
             server,
             hasMic,
             languages,
-            playTimeStart
+            playTimeStart : isoDateTime 
         }
         //token
         const token = localStorage.getItem('token')
@@ -223,6 +225,7 @@ function Lobby(){
             setHasMic("")
             setLanguages([])
             setPlayTimeStart("")
+            setIsFindRoomModalOpen(false)
 
 
         } catch (error) {
@@ -274,6 +277,15 @@ function Lobby(){
         setLanguages([])
         setPlayTimeStart("")
     }
+
+    const handleLanguageChange = (langCode) => {
+        if (languages.includes(langCode)) {
+            setLanguages(languages.filter(item => item !== langCode))
+        } else {
+            setLanguages([...languages, langCode])
+        }
+    }
+
 
     {/* ส่วนแสดงผล */}
     return (
@@ -395,15 +407,46 @@ function Lobby(){
                         </div>    
                             
                         <div className="findRoomEachFormStyle">
+                            
                             {/* languages */}
                             <label> 🗣️ ภาษา : </label>
+                                <div style={{ display: 'flex', gap: '15px', marginTop: '5px'}}>
+
+                                    {/* ภาษาไทย */}
+                                    <label style={{ cursor: 'pointer' }}>
+                                        <input 
+                                            type="checkbox"
+                                            checked={languages.includes("TH")}
+                                            onChange={() => handleLanguageChange("TH")}
+                                        /> TH (ภาษาไทย)
+                                    </label> 
+                                    {/* ภาษาอังกฤษ */}
+                                    <label style={{ cursor: 'pointer' }}>
+                                        <input 
+                                            type="checkbox"
+                                            checked={languages.includes("EN")}
+                                            onChange={() => handleLanguageChange("EN")}
+                                        /> EN (English)
+                                    </label>    
+                                </div>          
+                               
                         </div>
 
                         <div className="findRoomEachFormStyle">
                             {/* playTimeStart */}
-                            <label> 🕘 เวลาเริ่มเล่น : </label>
-                        </div>
+                            <label htmlFor="playtime-input"> 🕘 เวลาเริ่มเล่น : </label>
                             
+                            <input
+                                id="playtime-input"
+                                type="datetime-local"
+                                value={playTimeStart}
+                                onChange={(e) => setPlayTimeStart(e.target.value)}
+                                className="calenderStyle"
+                                />
+                            
+                        </div>    
+
+
                         <div className="findRoomButtonBlockStyle">
                             <button className="findRoomModalButton" onClick={handleFindRoom}>ค้นหา</button>
                             <button className="findRoomModalButton" onClick={handleCloseFindRoomModal}>ยกเลิก</button>
@@ -478,7 +521,7 @@ const titleStyle ={
 }
 
 
-// 🖼️ สมุดจับคู่รูปภาพพื้นหลังเกม (คีย์ฝั่งซ้ายต้องตรงกับชื่อเกมใน DB เป๊ะ ๆ นะครับ)
+// 🖼️ สมุดจับคู่รูปภาพพื้นหลังเกม (คีย์ฝั่งซ้ายต้องตรงกับชื่อเกมใน DB เป๊ะ ๆ)
 const gameBackgrounds = {
     "LOL": "/images/lol-pic-lobby.jpg", 
     "POE2": "/images/poe2-pic-lobby.jpg",
