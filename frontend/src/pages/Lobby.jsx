@@ -43,7 +43,7 @@ const GAME_RANKS = {
         { id: 36, name: "Grandmaster1"},
         { id: 37, name: "Challenger"}
     ],
-    "Varolant" : [
+    "Valorant" : [
         { id: 1, name: "Iron1"},
         { id: 2, name: "Iron2"},
         { id: 3, name: "Iron3"},
@@ -143,7 +143,8 @@ function Lobby(){
         e.preventDefault()
         if ( !roomName || !gameName || !maxPlayer || !playTimeStart) return ;
         
-       
+        const isoDateTimeStart = playTimeStart ? new Date(playTimeStart).toISOString() : null ;
+        const isoDateTimeEnd = playTimeEnd ? new Date(playTimeEnd).toISOString() : null ;
         //body
         const body = {
             roomName,
@@ -156,8 +157,8 @@ function Lobby(){
             minRating,
             maxPlayer,
             playTime : {
-                start: playTimeStart,
-                end: playTimeEnd
+                start: isoDateTimeStart,
+                end: isoDateTimeEnd
             }
         }
         // token
@@ -189,7 +190,7 @@ function Lobby(){
                 navigate(`/room/${data._id}`)
 
         } catch (error) {
-            console.error("Create Room Error", error)
+            console.error("Create Room Error", error.message)
         }
     }
     const handleFindRoom = async(e) => {
@@ -277,7 +278,20 @@ function Lobby(){
         setLanguages([])
         setPlayTimeStart("")
     }
-
+    const handleCloseCreateRoomModal = async () => {
+        setIsCreateRoomModalOpen(false);
+        setRoomName("")
+        setDescription("")
+        setGameName("")
+        setRank(0)
+        setServer("")
+        setHasMic("")
+        setLanguages([])
+        setMinRating(0)
+        setMaxPlayer(0)
+        setPlayTimeStart("")
+        setPlayTimeEnd("")
+    }
     const handleLanguageChange = (langCode) => {
         if (languages.includes(langCode)) {
             setLanguages(languages.filter(item => item !== langCode))
@@ -310,11 +324,11 @@ function Lobby(){
                     
                     <div key={room._id} style={finalCardStyle}>
                         <p>📝 ชื่อห้อง: {room.roomName}</p>
-                        <p>🎮 เกม: {room.gameName}</p>
-                        <p>👥 สมาชิก: {room.members?.length}/{room.maxPlayer}</p>
+                        <p>🎲 เกม: {room.gameName}</p>
+                        <p>👨‍👩‍👧‍👦 สมาชิก: {room.members?.length}/{room.maxPlayer}</p>
                         
                         {/* ปุ่มกดที่จะพาเราเปลี่ยนหน้าไปยังห้องนั้น ๆ พร้อมแนบ ID ไปด้วย */}
-                        <button onClick={() => navigate(`/room/${room._id}`)}>
+                        <button className="joinRoomButton" onClick={() => navigate(`/room/${room._id}`)}>
                             เข้าร่วมปาร์ตี้
                         </button>
                     </div>
@@ -323,13 +337,20 @@ function Lobby(){
             {/* จบส่วน .map() allRoom */}
 
             {/* ส่วนปุ่มหาห้อง */}
-            <div style={{padding:"30px 20px"}}>
+            <div style={{display: 'flex', padding:"30px 20px", gap: "50px" }}>
                 <button onClick={() => setIsFindRoomModalOpen(true)} className="findRoomButton">
                     หาห้อง
                 </button>
+                
+                <button onClick={() => setIsCreateRoomModalOpen(true)} className="findRoomButton">
+                    สร้างห้อง
+                </button>
             </div>
 
-            {/*  modal สำหรับกรอกหาห้อง */}
+            {/* ======================================================== */}
+            {/* 🌌 โซนที่ 2: โซน Modal (วางลอยต่อท้ายเพื่อน แต่อยู่ในกล่องพ่อใหญ่สุด) */}
+            {/* ======================================================== */}
+            {/*  modal สำหรับหาห้อง */}
             {isFindRoomModalOpen && (
                 <div onClick={handleCloseFindRoomModal} style={modalOverlayStyle}>
                     <div onClick={(e) => e.stopPropagation()} style={modalCardStyle}>
@@ -346,12 +367,12 @@ function Lobby(){
                                     <option value="">-- กรุณาเลือกเกม --</option>
                                     <option value="LOL">League of Legends</option>
                                     <option value="POE2">Path of Exile 2</option>
-                                    <option value="Varolant">Varolant</option>
+                                    <option value="Valorant">Valorant</option>
                                 </select>
                         </div>
 
                         {/* เงื่อนไขว่าเกมไหนมีแรงค์จึงจะให้กรอกแรงค์ */}
-                        {(gameName === "LOL" || gameName === "Varolant") && (
+                        {(gameName === "LOL" || gameName === "Valorant") && (
                             <div className="findRoomEachFormStyle">
                                 <label htmlFor="rank-select"> 🏆 เลือกแรงค์ : </label>
                                 <select
@@ -445,13 +466,203 @@ function Lobby(){
                                 />
                             
                         </div>    
-
+                        
 
                         <div className="findRoomButtonBlockStyle">
                             <button className="findRoomModalButton" onClick={handleFindRoom}>ค้นหา</button>
                             <button className="findRoomModalButton" onClick={handleCloseFindRoomModal}>ยกเลิก</button>
                         </div>
                     </div>
+                </div>
+            )}
+
+            {/* modal สำหรับสร้างห้อง */} 
+            {/*roomName,description,gameName,rank,server,hasMic,language,minRating,maxPlayer,playTime */}
+            {isCreateRoomModalOpen && (
+                <div onClick={handleCloseCreateRoomModal} style={modalOverlayStyle}>
+                    <div onClick={(e) => e.stopPropagation()} style={modalCardStyle}>
+                        <p style={titleStyle}>กรอกข้อมูลเพื่อสร้างห้อง</p>
+                            <div className="findRoomEachFormStyle">
+                                <label htmlFor='roomName-input'> 📝 ชื่อห้อง :</label>
+                                    <input
+                                        type='text'
+                                        value={roomName}
+                                        onChange={(e) => setRoomName(e.target.value)}
+                                        placeholder='...กรุณากรอกชื่อ เช่น ขอคนแบกแอลยาวๆ...'
+                                        className="selectModalStyle"
+                                    ></input>
+                            </div>
+                            <div className="findRoomEachFormStyle">
+                                <label htmlFor='description-input'> 📑 รายละเอียด :</label>
+                                    <input
+                                        type='text'
+                                        value={description}
+                                        onChange={(e) => setDescription(e.target.value)}
+                                        placeholder='...กรุณากรอกรายละเอียด เช่น ขอคนไม่โยนนะครับ...'
+                                        className="selectModalStyle"
+                                    ></input>
+                            </div>
+                            <div className="findRoomEachFormStyle">
+                            {/* กรอกชื่อเกม */}
+                            <label htmlFor="game-select"> 🕹️ เลือกเกม : </label>
+                                <select
+                                    id="game-select"
+                                    value={gameName}
+                                    onChange={(e) => setGameName(e.target.value)}
+                                    className="selectModalStyle"
+                                >
+                                    <option value="">-- กรุณาเลือกเกม --</option>
+                                    <option value="LOL">League of Legends</option>
+                                    <option value="POE2">Path of Exile 2</option>
+                                    <option value="Valorant">Valorant</option>
+                                </select>
+                            </div>
+
+                            {/* เงื่อนไขว่าเกมไหนมีแรงค์จึงจะให้กรอกแรงค์ */}
+                            {(gameName === "LOL" || gameName === "Valorant") && (
+                                <div className="findRoomEachFormStyle">
+                                    <label htmlFor="rank-select"> 🏆 เลือกแรงค์ : </label>
+                                    <select
+                                         id="rank-select"
+                                        value={String(rank)}
+                                        onChange={(e) => setRank(Number(e.target.value))}
+                                        className="selectModalStyle"
+                                    >
+                                        <option value="0">-- เลือกแรงค์ --</option>
+                                        {GAME_RANKS[gameName]?.map((r) =>(
+                                            <option key={r.id} value={r.id}>
+                                                {r.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+
+                            <div className="findRoomEachFormStyle">
+                                {/* server */}
+                                <label htmlFor="server-select"> 🌍 เลือกเซิร์ฟเวอร์ :</label>
+                                    <select
+                                    id="server-select"
+                                    value={server}
+                                    onChange={(e) => setServer(e.target.value)}
+                                    className="selectModalStyle"
+                                    >
+                                        <option value="">-- กรุณาเลือกเซิร์ฟเวอร์ --</option>
+                                        <option value="SEA">Southeast Asia</option>
+                                        <option value="EU">Europe</option>
+                                        <option value="NA">North America</option>
+                                        <option value="OCE">Oceania</option>
+                                        <option value="LATAM">Latin America</option>
+                                        <option value="MEA">Middle East & Africa</option>
+
+                                    </select>
+                            </div>
+
+                            <div className="findRoomEachFormStyle">
+                                {/* hasMic */}
+                                <label htmlFor="hasMic-input"> 🎙️ มีไมค์ : </label>
+                                <select
+                                    id="hasMic-input"
+                                    value={String(hasMic)}
+                                    onChange={(e) => setHasMic(e.target.value === "true")}
+                                    className="selectModalStyle"
+                                >
+                                    <option value="">-- กรุณาเลือก --</option>
+                                    <option value="true"> มีไมค์ </option>
+                                    <option value="false"> ไม่มีไมค์ </option>    
+                                </select>
+                            </div>    
+                            
+                            <div className="findRoomEachFormStyle">
+                                {/* languages */}
+                                <label> 🗣️ ภาษา : </label>
+                                    <div style={{ display: 'flex', gap: '15px', marginTop: '5px'}}>
+
+                                        {/* ภาษาไทย */}
+                                        <label style={{ cursor: 'pointer' }}>
+                                            <input 
+                                                type="checkbox"
+                                                checked={languages.includes("TH")}
+                                                onChange={() => handleLanguageChange("TH")}
+                                            /> TH (ภาษาไทย)
+                                        </label> 
+                                        {/* ภาษาอังกฤษ */}
+                                        <label style={{ cursor: 'pointer' }}>
+                                            <input 
+                                                type="checkbox"
+                                                checked={languages.includes("EN")}
+                                                onChange={() => handleLanguageChange("EN")}
+                                            /> EN (English)
+                                        </label>    
+                                    </div>         
+                            </div>
+
+                            <div className="findRoomEachFormStyle">
+                                <label htmlFor="maxplayer-input"> 👨‍👩‍👧‍👦 จำนวนสมาชิกสูงสุด : </label>
+                                <input
+                                    id="maxplayer-input"
+                                    type="number"
+                                    min="2"
+                                    max="10"
+                                    value={maxPlayer === 0 ? "" : maxPlayer}
+                                    onChange={(e) => setMaxPlayer(Number(e.target.value))}
+                                    placeholder="กรุณาระบุจำนวนคน เช่น 5"
+                                    className="selectModalStyle"
+                                />
+                            </div>
+
+                            <div className="findRoomEachFormStyle">
+                                <label htmlFor="minrating-input"> 🙂 ระบุคะแนน rating ขั้นต่ำ : </label>
+                                <input
+                                    id="minrating-input"
+                                    type="number"
+                                    min="0"
+                                    max="100"
+                                    value={minRating === 0 ? "" : minRating}
+                                    onChange={(e) => setMinRating(Number(e.target.value))}
+                                    placeholder="กรุณาระบุคะแนนความประพฤติขั้นต่ำ 0-100 คะแนน"
+                                    className="selectModalStyle"
+                                />
+                            </div>
+
+                            <div className="findRoomEachFormStyle">
+                                {/* playTimeStart */}
+                                <label htmlFor="playtimestart-input"> 🕘 เวลาเริ่มเล่น : </label>
+                            
+                                <input
+                                    id="playtimestart-input"
+                                    type="datetime-local"
+                                    value={playTimeStart}
+                                    onChange={(e) => setPlayTimeStart(e.target.value)}
+                                    className="calenderStyle"
+                                    />
+                            
+                            </div>                   
+                            <div className="findRoomEachFormStyle">
+                                {/* playTimeEnd */}
+                                <label htmlFor="playtimeend-input"> 🕛 เวลาเลิกล่น : </label>
+                            
+                                <input
+                                    id="playtimeend-input"
+                                    type="datetime-local"
+                                    value={playTimeEnd}
+                                    onChange={(e) => setPlayTimeEnd(e.target.value)}
+                                    className="calenderStyle"
+                                    />
+                            
+                            </div>
+
+
+
+
+                            <div className="findRoomButtonBlockStyle">
+                                <button className="findRoomModalButton" onClick={(e) => {console.log("ปุ่มสร้างห้องโดนกด");handleCreateRoom(e);}}>สร้างห้อง</button>
+                                <button className="findRoomModalButton" onClick={handleCloseCreateRoomModal}>ยกเลิก</button>
+
+                            </div>
+                           
+                    </div>
+                
                 </div>
             )}
         </div>
@@ -525,7 +736,7 @@ const titleStyle ={
 const gameBackgrounds = {
     "LOL": "/images/lol-pic-lobby.jpg", 
     "POE2": "/images/poe2-pic-lobby.jpg",
-    "Valorant": "/images/varolant-pic-lobby.jpg"
+    "Valorant": "/images/valorant-pic-lobby.jpg"
 };
 
 // 💡 ทำรูปภาพ Default สำรองไว้ด้วย เผื่อกรณีหาชื่อเกมไม่เจอ หรือพิมพ์ชื่อเกมใหม่เข้ามา

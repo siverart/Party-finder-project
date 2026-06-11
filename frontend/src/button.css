@@ -193,3 +193,22 @@
     border-color: #df7777; /* สีพีช/ชมพูเข้าเซ็ตกับปุ่มและเว็บของคุณโอ๊ต */
     box-shadow: 0 0 8px rgba(223, 119, 119, 0.2);
 }
+
+.joinRoomButton {
+    margin-left: 30px;
+    background-image: linear-gradient(rgb(231, 163, 146) 0%, rgb(207, 119, 119) 100%);
+    color: rgb(49, 51, 58);
+    font-family: kanit ;
+    border : none;
+    border-radius: 25px;
+    padding: 10px 15px;
+    font-size: 12px;
+    box-shadow: 0 0 8px rgba(75, 55, 55, 0.795);
+    cursor: pointer;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+
+.joinRoomButton:hover{
+    transform: translateY(2px);
+}
