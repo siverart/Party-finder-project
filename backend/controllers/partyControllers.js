@@ -191,8 +191,7 @@ const updateRoom = async (req, res) => {
     }
 }
 const changeHost = async (req, res) => {
-    const { roomId } = req.params;
-    const { playerId } = req.body;
+    const { roomId, playerId } = req.params;
     const originalHostId = req.user.id;
 
     if (!roomId) return res.status(400).json({

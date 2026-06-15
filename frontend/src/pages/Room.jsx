@@ -83,7 +83,7 @@ const Room = () => {
         }
     }
 
-    const handleCompleteRoom = async(roomId) => {
+    const handleCompleteRoom = async() => {
         const token = localStorage.getItem('token');
         const config = {
             headers : {
@@ -102,7 +102,7 @@ const Room = () => {
             console.error("Get Profile Error", error)
         }
     }
-    const handleUpdateRoom = async(roomId, e) => {
+    const handleUpdateRoom = async(e) => {
         e.preventDefault();
         const token = localStorage.getItem('token');
         const config = {
@@ -152,12 +152,57 @@ const Room = () => {
             } catch (error) {
                 console.error("Kick Player Error", error)
             }
-            }
+        }
         
     }
 
-    return 
+    const handleLeaveRoom = async() => {
+        const confirmLeave = window.confirm(`คุณต้องการที่จะออกจากห้องใช่หรือไม่?`)
+        if (confirmLeave) {
+            const token = localStorage.getItem('token');
+            const config = {
+                headers : {
+                    Authorization : `Bearer ${token}`
+                }
+            }
+            try{
+                const response = await axios.post(`http://localhost:5000/api/party/leave-room/${roomId}`, config)
+                if (response.data.success) {
+                    alert(response.data.message)
+                    navigate('/lobby')
+                }
+            } catch (error) {
+                console.error("Leave Room Error", error)
+            } 
 
+        }
+    }   
+
+    const handleChangeHost = async(playerName, playerId) => {
+        const confirmChangeHost = window.confirm(`คุณแน่ใจหรือไม่ว่าจะให้คุณ [ ${playerName} ] เป็นหัวหน้าห้อง?`);
+        if ( confirmChangeHost ){
+            const token = localStorage.getItem('token');
+            const config = {
+                headers : {
+                Authorization : `Bearer ${token}`
+                }
+            }
+            try {
+                const response = await axios.post(`http://localhost:5000/api/party/change-host/${roomId}/${playerId}`, config);
+                if (response.data.success) {
+                    alert(response.data.message)
+                    setRoom(response.data.data)
+                }
+            } catch (error) {
+                console.error("Change Host Error", error)
+            }
+        }
+        }
+        
+    }
+    return (<div> 
+        <p>หน้าห้อง</p>
+        </div>)
 }
         
 
