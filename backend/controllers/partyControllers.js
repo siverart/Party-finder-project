@@ -251,12 +251,8 @@ const changeHost = async (req, res) => {
 
 const kickPlayer = async (req, res) => {
 
-    const { roomId } = req.params;
-    if (!roomId ) return res.status(400).json({ success: false, message: "กรุณาระบุไอดีห้องด้วย" });
-
-    const { playerId } = req.body;
-    if (!playerId ) return res.status(400).json({ success: false, message: "กรุณาระบุไอดีคนที่ต้องการไล่ออกจากห้อง" });
-    
+    const { roomId, playerId } = req.params;
+    if (!roomId || !playerId ) return res.status(400).json({ success: false, message: "ระุบข้อมูลห้องและผู้ที่ต้องการไล่ออกจากห้องให้ครบ" });
 
     const hostId = req.user.id;
 

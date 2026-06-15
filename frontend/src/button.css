@@ -195,7 +195,6 @@
 }
 
 .joinRoomButton {
-    margin-left: 30px;
     background-image: linear-gradient(rgb(231, 163, 146) 0%, rgb(207, 119, 119) 100%);
     color: rgb(49, 51, 58);
     font-family: kanit ;
@@ -207,6 +206,8 @@
     cursor: pointer;
     font-weight: 600;
     letter-spacing: 0.05em;
+    margin-left: auto;
+    margin-right: 15px;
 }
 
 .joinRoomButton:hover{

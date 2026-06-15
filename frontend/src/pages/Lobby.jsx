@@ -115,7 +115,8 @@ function Lobby(){
             if (error.response && error.response.status === 401) {
                 alert("เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่อีกครั้ง");
                 localStorage.removeItem('token');    // ล้างตัวหมดอายุทิ้งซะ
-                localStorage.removeItem('username'); // ล้างยูสเซอร์เนมด้วย
+                localStorage.removeItem('username');
+                localStorage.removeItem('myUserId'); // ล้างยูสเซอร์เนมด้วย
                 navigate('/login');
             }
         }
@@ -323,9 +324,9 @@ function Lobby(){
                 return (
                     
                     <div key={room._id} style={finalCardStyle}>
-                        <p>📝 ชื่อห้อง: {room.roomName}</p>
-                        <p>🎲 เกม: {room.gameName}</p>
-                        <p>👨‍👩‍👧‍👦 สมาชิก: {room.members?.length}/{room.maxPlayer}</p>
+                        <p style={{marginLeft: '10px'}}>📝 ชื่อห้อง: {room.roomName}</p>
+                        <p style={{marginLeft: '10px'}}>🎲 เกม: {room.gameName}</p>
+                        <p style={{marginLeft: '10px'}}>👨‍👩‍👧‍👦 สมาชิก: {room.members?.length}/{room.maxPlayer}</p>
                         
                         {/* ปุ่มกดที่จะพาเราเปลี่ยนหน้าไปยังห้องนั้น ๆ พร้อมแนบ ID ไปด้วย */}
                         <button className="joinRoomButton" onClick={() => navigate(`/room/${room._id}`)}>
