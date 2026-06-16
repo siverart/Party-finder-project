@@ -66,7 +66,7 @@ const userScheme = new mongoose.Schema({
     },
     profileImage: {
         type: String,
-        default: "http://localhost:5000/uploads/default-avatar.png"
+        default: "https://api.dicebear.com/7.x/bottts/svg?seed=Oat"
     },
     currentRoom: {
         type: mongoose.Schema.Types.ObjectId,

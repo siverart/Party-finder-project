@@ -222,18 +222,51 @@ const Room = () => {
         
     
     return (
+        
         <div style={containerStyle}>
             {/* เริ่มต้น room.map เอารายชื่อคนในห้องออกมา */}
-            {room?.members?.map((member) => (
-                <div key={member._id}>
-                    <span>{member.displayName}</span>
-                    {isHost && member._id !== myUserId && (
-                        <button onClick={() => handleKickPlayer( member._id, member.displayName )}>
-                            ❌ เตะคนนี้ออก
-                        </button>
-                    )}
-                </div>
-            ))}
+            {room?.members?.map((member) => {
+                const isThisMemberHost = member._id === room?.host?._id;
+
+                const memberContainerStyle = {
+                    display: 'flex',
+                    flexDirection : 'column',
+                    width: '300px',
+                    height: '300px',
+                    backgroundColor: isThisMemberHost ? 'rgb(236, 223, 212)': 'rgb(212, 232, 236)' ,
+                    borderRadius: '24px',
+                    boxShadow: '0 10px 40px rgba(20, 28, 56, 0.49)',
+                    padding: '30px 20px',
+                    gap:'10px',
+                    borderLeft: '6px solid rgb(219, 121, 108)'
+                };
+                return(
+                    // กล่องใส่สมาชิกแต่ละคน
+                <div style={memberContainerStyle} key={member._id}>
+                    {/* กล่องใส่รูปโปรไฟล์ */}
+                    <div style={avatarWrapperStyle}>
+                        <img
+                            src={member.profileImage}
+                            alt={member.displayName}
+                            style={avatarStyle}
+                            />
+                    </div>
+
+                <span style={{ fontWeight: isThisMemberHost ? 'bold' : 'normal' }}>
+                    {member.displayName}
+                </span>
+
+                {isThisMemberHost && (<span> 👑 </span>)}
+
+                {isHost && member._id !== myUserId && (
+                    <button onClick={() => handleKickPlayer( member._id, member.displayName )}>
+                        ❌ เตะคนนี้ออก
+                    </button>
+                )}
+            </div>
+                )
+                
+            })}
             {/* จบ map */}
 
 
@@ -242,7 +275,7 @@ const Room = () => {
 }
 const containerStyle = {
     display: 'flex',
-    flexDirection: 'column',
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     minHeight: '100vh',
@@ -255,15 +288,29 @@ const containerStyle = {
     backgroundRepeat: 'no-repeat',
     padding: '40px 50px',
     fontFamily: "'Kanit', sans-serif",
-    gap: '10px'
+    gap: '30px'
 };
-const roomCardStyle = {
+
+const avatarWrapperStyle ={ 
+    width: '110px',
+    height: '110px',
+    borderRadius: '50%',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)', // วงแหวนกระจกฝ้าล้อมรอบรูปโปรไฟล์
     display: 'flex',
-    flexDirection:'row',
-    alignItems: 'center',
     justifyContent: 'center',
-    width:'100%',
-    maxWidth: '800px',
+    alignItems: 'center',
+    marginBottom: '15px',
+    border: '3px solid white',
+    boxShadow: '0 4px 10px rgba(0,0,0,0.15)'
+};
+const avatarStyle = {
+    width: '90px',
+    height: '90px',
+    borderRadius: '50%',
+    objectFit: 'cover'
+};
+const memberCardStyle = {
+    
     backgroundColor: 'rgb(212, 232, 236)',
     borderRadius: '24px',
     boxShadow: '0 10px 40px rgba(20, 28, 56, 0.49)',

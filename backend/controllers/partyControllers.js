@@ -5,7 +5,7 @@ const Party = require("../models/Party")
 const getAllRoom = async (req, res) => {
     try {
         const allRoom = await Party.find( { roomStatus: { $in : ['waiting', 'full'] } } )
-        .populate('host', 'displayName rating')
+        .populate('host', 'displayName profileImage')
         .sort({ createdAt: -1 });
 
 
@@ -28,8 +28,8 @@ const getSingleRoom = async (req, res) => {
 
     try {
         const wantedRoom = await Party.findById(roomId)
-        .populate('host', 'displayName rating')
-        .populate('members', 'displayName');
+        .populate('host', 'displayName profileImage')
+        .populate('members', 'displayName profileImage');
 
         if (!wantedRoom) return res.status(404).json({ message: "ไม่พบห้อง"});
 
@@ -172,8 +172,8 @@ const updateRoom = async (req, res) => {
 
         const updatedRoom = await room.save();
 
-        await updatedRoom.populate('host', 'displayName rating');
-        await updatedRoom.populate('members', 'displayName');
+        await updatedRoom.populate('host', 'displayName profileImage');
+        await updatedRoom.populate('members', 'displayName profileImage');
 
         return res.status(200).json({
             success: true,
@@ -230,8 +230,8 @@ const changeHost = async (req, res) => {
         }
         room.host = playerId;
         const savedRoom = await room.save();
-        await savedRoom.populate('host', 'displayName rating');
-        await savedRoom.populate('members', 'displayName');
+        await savedRoom.populate('host', 'displayName profileImage');
+        await savedRoom.populate('members', 'displayName profileImage');
 
         return res.status(200).json({
             success: true,
@@ -277,8 +277,8 @@ const kickPlayer = async (req, res) => {
         const savedRoom = await room.save();
         //แก้ห้องปัจจุบันของคนที่โดนเตะให้เป็นว่าไม่อยู่ในห้องไหนเลย
         await User.findByIdAndUpdate(playerId, { currentRoom: null });
-        await savedRoom.populate('host', 'displayName rating');
-        await savedRoom.populate('members', 'displayName');
+        await savedRoom.populate('host', 'displayName profileImage');
+        await savedRoom.populate('members', 'displayName profileImage');
 
         return res.status(200).json({
             success: true,
@@ -373,8 +373,8 @@ const findRoom = async (req, res) => {
 
         //หาห้องที่ตรงเงื่อนไข
         const matchedRoom = await Party.find(queryConditions)
-        .populate('host', 'displayName rating')
-        .populate('members', 'displayName');
+        .populate('host', 'displayName profileImage')
+        .populate('members', 'displayName profileImage');
 
         if (!matchedRoom) return res.status(404).json({ success: false, message: "ไม่พบห้องที่ตรงตามเงื่อนไข"})
 
@@ -503,8 +503,8 @@ const leaveRoom = async (req, res) => {
 
         await User.findByIdAndUpdate(playerId, { currentRoom: null });
 
-        await updatedRoom.populate('host', 'displayName rating');
-        await updatedRoom.populate('members', 'displayName');
+        await updatedRoom.populate('host', 'displayName profileImage');
+        await updatedRoom.populate('members', 'displayName profileImage');
 
         return res.status(200).json({
             success: true,
