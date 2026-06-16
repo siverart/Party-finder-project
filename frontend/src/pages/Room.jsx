@@ -8,27 +8,31 @@ const Room = () => {
     const navigate = useNavigate();
 
 
-    const [ room, setRoom ] = useState({})
+    const [ room, setRoom ] = useState(null)
     const [ isProfileModalOpen, setIsProfileModalOpen ] = useState(false)
-    const [ selectedProfile, setSelectedProfile ] = useState({})
-
+    const [ selectedProfile, setSelectedProfile ] = useState(null)
+    const myUserId = localStorage.getItem('myUserId');
+    const isHost = room?.host?._id === myUserId
 
     useEffect (() => {
         const token = localStorage.getItem('token')
-        const myUserId = localStorage.getItem('myUserId')
         if (!token) {
             alert("กรุณาเข้าสู่ระบบก่อนใช้งาน");
             navigate('/login');
 
         }   
         const fetchAndCheckStatus = async () => {
+            console.log(`⏱️ [${new Date().toLocaleTimeString()}] กำลังยิงเช็กสถานะห้อง...`)
+
             try {
-                const response = await axios.get(`/api/party/get-single-room/${roomId}`, {
+                const response = await axios.get(`http://localhost:5000/api/party/get-single-room/${roomId}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
     
                 if (response.data.success) {
+                    
                     const currentRoom = response.data.data;
+                    console.log("📦 ข้อมูลดิบจาก Express:", response.data.data)
                     const stillInRoom = currentRoom.members?.some(m => m._id === myUserId);
                     const isHostNow = currentRoom.host?._id === myUserId;
     
@@ -60,7 +64,24 @@ const Room = () => {
         const checkStatus = setInterval(fetchAndCheckStatus, 3000);
         
         // ตรงนี้จะทำงานก็ต่อเมื่อ user ออกจากหน้านี้แล้วหน้านี้กำลังจะปิดตัวลง
-        return () => clearInterval(checkStatus); // สั่งหยุด loop 3 วิ
+        return () => {
+            clearInterval(checkStatus); // สั่งหยุด loop 3 วิ
+            
+            const autoLeaveRoom = async() => {
+                try {
+                    await axios.post(`http://localhost:5000/api/party/leave-room/${roomId}`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    console.log("🧹 ระบบทำความสะอาด: สั่งอัปเดตใน DB เรียบร้อยหลังย้ายหน้าหนี")
+                } catch (err) {
+                    console.error("ไม่สามารถเคลียร์ห้องออโต้ได้", err);
+                }
+            };
+            
+            if (roomId) {
+                autoLeaveRoom();
+            }
+        }
     }, [roomId]);
 
    
@@ -197,13 +218,87 @@ const Room = () => {
                 console.error("Change Host Error", error)
             }
         }
-        }
-        
     }
-    return (<div> 
-        <p>หน้าห้อง</p>
-        </div>)
-}
         
+    
+    return (
+        <div style={containerStyle}>
+            {/* เริ่มต้น room.map เอารายชื่อคนในห้องออกมา */}
+            {room?.members?.map((member) => (
+                <div key={member._id}>
+                    <span>{member.displayName}</span>
+                    {isHost && member._id !== myUserId && (
+                        <button onClick={() => handleKickPlayer( member._id, member.displayName )}>
+                            ❌ เตะคนนี้ออก
+                        </button>
+                    )}
+                </div>
+            ))}
+            {/* จบ map */}
+
+
+        </div>
+    )
+}
+const containerStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: '100vh',
+    backgroundImage: `
+        linear-gradient(135deg, rgba(181, 218, 253, 0.8) 0%, rgba(243, 207, 192, 0.8) 100%), 
+        url('/images/bg.avif')`,
+
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
+    padding: '40px 50px',
+    fontFamily: "'Kanit', sans-serif",
+    gap: '10px'
+};
+const roomCardStyle = {
+    display: 'flex',
+    flexDirection:'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width:'100%',
+    maxWidth: '800px',
+    backgroundColor: 'rgb(212, 232, 236)',
+    borderRadius: '24px',
+    boxShadow: '0 10px 40px rgba(20, 28, 56, 0.49)',
+    padding: '30px 20px',
+    gap:'10px',
+    borderLeft: '6px solid rgb(219, 121, 108)'
+}
+
+// 🔒 สไตล์กล่องลอยกลางอากาศ (Modal CSS)
+const modalOverlayStyle = {
+    position: 'fixed',
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)', // ทำฉากหลังมืดแบบโปร่งแสงครอบหน้าจอหลัก
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 9999 // มั่นใจได้ว่าจะไม่มีอะไรลอยทับหน้าต่างนี้
+};
+const modalCardStyle = {
+    backgroundImage:"linear-gradient(135deg, rgb(161, 210, 255) 0%, rgb(245, 245, 245) 50%, rgb(250, 186, 158) 100%)", 
+    padding: "20px 15px", 
+    borderRadius: "25px",
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    gap: '10px',
+    width: '800px'
+};
+
+const titleStyle ={
+    color : 'rgb(42, 48, 77)',
+    fontSize: '20px',
+    fontWeight: '600',
+    marginBottom: '13px',
+    marginTop: '8px'
+}  
 
 export default Room;

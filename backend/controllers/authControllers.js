@@ -121,7 +121,8 @@ const login = async (req, res) => {
         return res.status(200).json(
             { 
                 token : loginToken,
-                username : user.displayName || user.username
+                username : user.displayName || user.username,
+                id : user._id
 
             })
     } catch (err) {
