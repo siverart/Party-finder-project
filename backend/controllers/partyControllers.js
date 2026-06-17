@@ -393,7 +393,7 @@ const findRoom = async (req, res) => {
 const getOtherProfile = async (req, res) => {
     try{
         const { findedId } = req.params;
-        const targetUser = await User.findById(findedId).select('displayName description tags contacts rating');;
+        const targetUser = await User.findById(findedId).select('displayName description tags contacts rating profileImage');;
         if (!targetUser) return res.status(404).json({ success: false, message: "ไม่พบผู้ใช้ที่ต้องการ"});
 
         const targetUserObj = targetUser.toObject();

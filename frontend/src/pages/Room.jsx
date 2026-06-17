@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useParams, useNavigate } from 'react-router-dom';
+import '../button.css';
 
 const Room = () => {
     // 🕵️‍♂️ ดึง roomId จาก URL ออกมาโชว์เพื่อความชัวร์ว่าส่งมาถูกอันไหม
@@ -11,6 +12,8 @@ const Room = () => {
     const [ room, setRoom ] = useState(null)
     const [ isProfileModalOpen, setIsProfileModalOpen ] = useState(false)
     const [ selectedProfile, setSelectedProfile ] = useState(null)
+    const [ isUpdateRoomModalOpen, setIsUpdateRoomModalOpen ] = useState(false)
+
     const myUserId = localStorage.getItem('myUserId');
     const isHost = room?.host?._id === myUserId
 
@@ -219,30 +222,46 @@ const Room = () => {
             }
         }
     }
-        
+    const handleCloseProfileModal = async () => {
+        setIsProfileModalOpen(false)
+        setSelectedProfile(null)
+    }
+    const handleCloseUpdateModal = async () => {
+        setIsUpdateRoomModalOpen(false)
+    }  
     
     return (
         
         <div style={containerStyle}>
-            {/* เริ่มต้น room.map เอารายชื่อคนในห้องออกมา */}
+            <div style={memberSectionStyle}>
+                {/* เริ่มต้น room.map เอารายชื่อคนในห้องออกมา */}
             {room?.members?.map((member) => {
                 const isThisMemberHost = member._id === room?.host?._id;
 
                 const memberContainerStyle = {
                     display: 'flex',
                     flexDirection : 'column',
-                    width: '300px',
+                    width: '150px',
                     height: '300px',
-                    backgroundColor: isThisMemberHost ? 'rgb(236, 223, 212)': 'rgb(212, 232, 236)' ,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    backgroundImage: isThisMemberHost ?
+                     `linear-gradient(170deg, rgba(250, 60, 35, 0.32) 0%, rgba(113, 244, 248, 0.4) 100%), 
+                    url('/images/background-profile-card.jpg')` 
+                    : 
+                    `linear-gradient(170deg, rgba(243, 147, 140, 0.23) 0%, rgba(126, 208, 255, 0.61) 150%), 
+                    url('/images/background-profile-card.jpg')` ,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundRepeat: 'no-repeat',
                     borderRadius: '24px',
                     boxShadow: '0 10px 40px rgba(20, 28, 56, 0.49)',
                     padding: '30px 20px',
-                    gap:'10px',
-                    borderLeft: '6px solid rgb(219, 121, 108)'
+                    gap:'20px'
                 };
                 return(
                     // กล่องใส่สมาชิกแต่ละคน
-                <div style={memberContainerStyle} key={member._id}>
+                <div style={memberContainerStyle} key={member._id} onClick={() => handleGetOtherProfile(member._id)}>
                     {/* กล่องใส่รูปโปรไฟล์ */}
                     <div style={avatarWrapperStyle}>
                         <img
@@ -252,30 +271,102 @@ const Room = () => {
                             />
                     </div>
 
-                <span style={{ fontWeight: isThisMemberHost ? 'bold' : 'normal' }}>
-                    {member.displayName}
-                </span>
+                    <span style={{ fontWeight: isThisMemberHost ? 'bold' : 'normal', color:'rgb(88, 88, 88)'}}>
+                        {member.displayName}
+                    </span>
 
-                {isThisMemberHost && (<span> 👑 </span>)}
+                    {isThisMemberHost && (<span> 👑 </span>)}
 
-                {isHost && member._id !== myUserId && (
-                    <button onClick={() => handleKickPlayer( member._id, member.displayName )}>
-                        ❌ เตะคนนี้ออก
-                    </button>
-                )}
-            </div>
+                    {isHost && member._id !== myUserId && (
+                        <>
+                        <button className="kickButton" onClick={() => handleKickPlayer( member._id, member.displayName )}>
+                            ❌ เชิญออก
+                        </button>
+                        <button className="kickButton" onClick={() => handleChangeHost(member.displayName, member._id)}>
+                            👑 ตั้งเป็นหัวห้อง
+                        </button>
+                        </>
+                    
+                    )}
+                </div>
                 )
-                
             })}
+            </div>
             {/* จบ map */}
+            
+            
+            <div style={buttonSectionStyle} >
+                {isHost && (
+                    <>
+                    <button className='findRoomButton' onClick={() => handleCompleteRoom}>
+                        👏🏻 กดเพื่อจบห้อง
+                    </button>
+                    <button className='findRoomButton' onClick={() => handleUpdateRoom}>
+                        📑 แก้ไขข้อมูลห้อง
+                    </button>
+                    </>
+                    
+                )}
+                <button  className='findRoomButton' onClick={() => handleLeaveRoom}>
+                    🚪 ออกจากห้อง 
+                </button>
+
+                
+
+            </div>
 
 
+            { isProfileModalOpen &&(
+                <div onClick={handleCloseProfileModal} style={modalOverlayStyle}>
+                    <div onClick={(e) => e.stopPropagation()} style={modalCardStyle}>
+                        <div style={avatarWrapperStyle}>
+                            <img 
+                                src="selectedProfile.profileImage"
+                                alt="profile"
+                                style={avatarStyle}
+                            />
+                        </div>
+                        <h2 style={displayNameTextStyle}>{selectedProfile.displayName}</h2>
+                        <span style={ratingStyle}>⭐ เรตติ้งของคุณ: {selectedProfile.rating || 0}/100</span>
+                        <h3> คำอธิบายเพิ่มเติม </h3>
+                        <p>{selectedProfile.description}</p>
+                        <h3> แท๊ก </h3>
+                        {selectedProfile?.tags?.length > 0 && (
+                            selectedProfile.tags.map((tag, index) => (
+                                <div key={index}>
+                                    <span>#{tag}</span>
+                                </div>
+                            )) 
+                        )}
+                        <h3> รายการติดต่อ </h3>
+                        {selectedProfile?.contacts?.length > 0 && (
+                            selectedProfile.contacts.map((contact) => (
+                                <div key={contact._id}>
+                                    <span style={{ fontWeight: 'bold', color: '#4A6B64' }}>{contact.platform}:</span>
+                                    <span style={{ marginLeft: '5px', flex: 1 }}>{contact.value}</span>
+                                                                    
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
+            )}
+            {isUpdateRoomModalOpen && (
+                <div onClick={handleCloseUpdateModal} style={modalOverlayStyle}>
+                    <div onClick={(e) => e.stopPropagation()} style={modalCardStyle}>
+                        
+                    </div>         
+                </div>
+            
+            )}
+
+        {/* แท๊กปิดสุดท้าย */}
         </div>
     )
 }
 const containerStyle = {
     display: 'flex',
-    flexDirection: 'row',
+    flexDirection: 'column',
     justifyContent: 'center',
     alignItems: 'center',
     minHeight: '100vh',
@@ -290,10 +381,15 @@ const containerStyle = {
     fontFamily: "'Kanit', sans-serif",
     gap: '30px'
 };
-
+const memberSectionStyle = {
+    display: 'flex', 
+    flexDirection: 'row',
+    gap: '50px',
+    
+};
 const avatarWrapperStyle ={ 
-    width: '110px',
-    height: '110px',
+    width: '90px',
+    height: '90px',
     borderRadius: '50%',
     backgroundColor: 'rgba(255, 255, 255, 0.2)', // วงแหวนกระจกฝ้าล้อมรอบรูปโปรไฟล์
     display: 'flex',
@@ -304,11 +400,16 @@ const avatarWrapperStyle ={
     boxShadow: '0 4px 10px rgba(0,0,0,0.15)'
 };
 const avatarStyle = {
-    width: '90px',
-    height: '90px',
+    width: '60px',
+    height: '60px',
     borderRadius: '50%',
     objectFit: 'cover'
 };
+const buttonSectionStyle = {
+    display: 'flex',
+    flexDirection: 'row',
+    gap: '30px'
+}
 const memberCardStyle = {
     
     backgroundColor: 'rgb(212, 232, 236)',
@@ -346,6 +447,19 @@ const titleStyle ={
     fontWeight: '600',
     marginBottom: '13px',
     marginTop: '8px'
-}  
+}
+const displayNameTextStyle = {
+    fontSize: '26px',
+    margin: '0 0 5px 0',
+    fontWeight: 'bold',
+    letterSpacing: '0.5px'
+};  
 
+const ratingStyle = {
+    fontSize: '14px',
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    padding: '4px 12px',
+    borderRadius: '20px',
+    marginBottom: '15px'
+};
 export default Room;
