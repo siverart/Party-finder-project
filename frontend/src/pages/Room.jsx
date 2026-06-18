@@ -3,6 +3,76 @@ import axios from 'axios'
 import { useParams, useNavigate } from 'react-router-dom';
 import '../button.css';
 
+// note
+// 1.update languages bug when click the whole page is turn green
+const GAME_RANKS = {
+    "LOL": [
+        { id: 1, name: "Iron4"},
+        { id: 2, name: "Iron3"},
+        { id: 3, name: "Iron2"},
+        { id: 4, name: "Iron1"},
+        { id: 5, name: "Bronze4"},
+        { id: 6, name: "Bronze3"},
+        { id: 7, name: "Bronze2"},
+        { id: 8, name: "Bronze1"},
+        { id: 9, name: "Silver4"},
+        { id: 10, name: "Silver3"},
+        { id: 11, name: "Silver2"},
+        { id: 12, name: "Silver1"},
+        { id: 13, name: "Gold4"},
+        { id: 14, name: "Gold3"},
+        { id: 15, name: "Gold2"},
+        { id: 16, name: "Gold1"},
+        { id: 17, name: "Platinum4"},
+        { id: 18, name: "Platinum3"},
+        { id: 19, name: "Platinum2"},
+        { id: 20, name: "Platinum1"},
+        { id: 21, name: "Emerald4"},
+        { id: 22, name: "Emerald3"},
+        { id: 23, name: "Emerald2"},
+        { id: 24, name: "Emerald1"},
+        { id: 25, name: "Diamond4"},
+        { id: 26, name: "Diamond3"},
+        { id: 27, name: "Diamond2"},
+        { id: 28, name: "Diamond1"},
+        { id: 29, name: "Master4"},
+        { id: 30, name: "Master3"},
+        { id: 31, name: "Master2"},
+        { id: 32, name: "Master1"},
+        { id: 33, name: "Grandmaster4"},
+        { id: 34, name: "Grandmaster3"},
+        { id: 35, name: "Grandmaster2"},
+        { id: 36, name: "Grandmaster1"},
+        { id: 37, name: "Challenger"}
+    ],
+    "Valorant" : [
+        { id: 1, name: "Iron1"},
+        { id: 2, name: "Iron2"},
+        { id: 3, name: "Iron3"},
+        { id: 4, name: "Bronze1"},
+        { id: 5, name: "Bronze2"},
+        { id: 6, name: "Bronze3"},
+        { id: 7, name: "Silver1"},
+        { id: 8, name: "Silver2"},
+        { id: 9, name: "Silver3"},
+        { id: 10, name: "Gold1"},
+        { id: 11, name: "Gold2"},
+        { id: 12, name: "Gold3"},
+        { id: 13, name: "Platinum1"},
+        { id: 14, name: "Platinum2"},
+        { id: 15, name: "Platinum3"},
+        { id: 16, name: "Diamond1"},
+        { id: 17, name: "Diamond2"},
+        { id: 18, name: "Diamond3"},
+        { id: 19, name: "Ascendant1"},
+        { id: 20, name: "Ascendant2"},
+        { id: 21, name: "Ascendant3"},
+        { id: 22, name: "Immortal1"},
+        { id: 23, name: "Immortal2"},
+        { id: 24, name: "Immortal3"},
+        { id: 25, name: "Radiant"}
+    ]
+}
 const Room = () => {
     // 🕵️‍♂️ ดึง roomId จาก URL ออกมาโชว์เพื่อความชัวร์ว่าส่งมาถูกอันไหม
     const { roomId } = useParams(); 
@@ -13,6 +83,7 @@ const Room = () => {
     const [ isProfileModalOpen, setIsProfileModalOpen ] = useState(false)
     const [ selectedProfile, setSelectedProfile ] = useState(null)
     const [ isUpdateRoomModalOpen, setIsUpdateRoomModalOpen ] = useState(false)
+    const [ editForm, setEditForm ] = useState(null);
 
     const myUserId = localStorage.getItem('myUserId');
     const isHost = room?.host?._id === myUserId
@@ -100,7 +171,7 @@ const Room = () => {
             
             const { data } = response.data
             setSelectedProfile(data)
-            isProfileModalOpen(true)
+            setIsProfileModalOpen(true)
 
         } catch (error) {
             console.error("Get Profile Error", error)
@@ -135,18 +206,18 @@ const Room = () => {
             }
         }
         const body = {
-            roomName: room.roomName,
-            description: room.description,
-            gameName: room.gameName,
-            rank: room.rank,
-            server: room.server,
-            languages: room.languages,
-            hasMic: room.hasMic,
-            maxPlayer: room.maxPlayer,
-            rating: room.rating,
+            roomName: editForm.roomName,
+            description: editForm.description,
+            gameName: editForm.gameName,
+            rank: editForm.rank,
+            server: editForm.server,
+            languages: editForm.languages,
+            hasMic: editForm.hasMic,
+            maxPlayer: editForm.maxPlayer,
+            rating: editForm.rating,
             playTime: {
-                start : room.playTime?.start,
-                end: room.playTime?.end
+                start : editForm.playTime?.start,
+                end: editForm.playTime?.end
             }
 
         }
@@ -154,6 +225,7 @@ const Room = () => {
             const response = await axios.patch(`http://localhost:5000/api/party/update-room/${roomId}`, body, config)
             const { message } = response.data
             alert(message)
+            setIsUpdateRoomModalOpen(false)
         } catch (error) {
             console.error("Update Room Error", error)
         }
@@ -228,8 +300,18 @@ const Room = () => {
     }
     const handleCloseUpdateModal = async () => {
         setIsUpdateRoomModalOpen(false)
+    }
+    const handleLanguageChange = (langCode) => {
+        if (editForm?.languages.includes(langCode)) {
+            setEditForm(editForm?.languages.filter(item => item !== langCode))
+        } else {
+            setEditForm(editForm?.push(langCode))
+        }
     }  
-    
+    const handleOpenUpdateModal = () => {
+        setEditForm({ ...room });
+        setIsUpdateRoomModalOpen(true);
+    };
     return (
         
         <div style={containerStyle}>
@@ -279,10 +361,22 @@ const Room = () => {
 
                     {isHost && member._id !== myUserId && (
                         <>
-                        <button className="kickButton" onClick={() => handleKickPlayer( member._id, member.displayName )}>
+                        <button 
+                        className="kickButton" 
+                        onClick={(e) => {
+                                e.stopPropagation();
+                                handleKickPlayer( member._id, member.displayName );
+                            }}
+                        >
                             ❌ เชิญออก
                         </button>
-                        <button className="kickButton" onClick={() => handleChangeHost(member.displayName, member._id)}>
+                        <button 
+                        className="kickButton" 
+                        onClick={(e) => {
+                                e.stopPropagation(); 
+                                handleChangeHost(member.displayName, member._id);
+                            }}
+                        >        
                             👑 ตั้งเป็นหัวห้อง
                         </button>
                         </>
@@ -298,16 +392,16 @@ const Room = () => {
             <div style={buttonSectionStyle} >
                 {isHost && (
                     <>
-                    <button className='findRoomButton' onClick={() => handleCompleteRoom}>
+                    <button className='findRoomButton' onClick={handleCompleteRoom}>
                         👏🏻 กดเพื่อจบห้อง
                     </button>
-                    <button className='findRoomButton' onClick={() => handleUpdateRoom}>
+                    <button className='findRoomButton' onClick={handleOpenUpdateModal}>
                         📑 แก้ไขข้อมูลห้อง
                     </button>
                     </>
                     
                 )}
-                <button  className='findRoomButton' onClick={() => handleLeaveRoom}>
+                <button  className='findRoomButton' onClick={handleLeaveRoom}>
                     🚪 ออกจากห้อง 
                 </button>
 
@@ -321,18 +415,18 @@ const Room = () => {
                     <div onClick={(e) => e.stopPropagation()} style={modalCardStyle}>
                         <div style={avatarWrapperStyle}>
                             <img 
-                                src="selectedProfile.profileImage"
+                                src={selectedProfile?.profileImage}
                                 alt="profile"
                                 style={avatarStyle}
                             />
                         </div>
-                        <h2 style={displayNameTextStyle}>{selectedProfile.displayName}</h2>
-                        <span style={ratingStyle}>⭐ เรตติ้งของคุณ: {selectedProfile.rating || 0}/100</span>
+                        <h2 style={displayNameTextStyle}>{selectedProfile?.displayName}</h2>
+                        <span style={ratingStyle}>⭐ เรตติ้งของคุณ: {selectedProfile?.rating || 0}/100</span>
                         <h3> คำอธิบายเพิ่มเติม </h3>
-                        <p>{selectedProfile.description}</p>
+                        <p>{selectedProfile?.description}</p>
                         <h3> แท๊ก </h3>
                         {selectedProfile?.tags?.length > 0 && (
-                            selectedProfile.tags.map((tag, index) => (
+                            selectedProfile?.tags.map((tag, index) => (
                                 <div key={index}>
                                     <span>#{tag}</span>
                                 </div>
@@ -340,7 +434,7 @@ const Room = () => {
                         )}
                         <h3> รายการติดต่อ </h3>
                         {selectedProfile?.contacts?.length > 0 && (
-                            selectedProfile.contacts.map((contact) => (
+                            selectedProfile?.contacts.map((contact) => (
                                 <div key={contact._id}>
                                     <span style={{ fontWeight: 'bold', color: '#4A6B64' }}>{contact.platform}:</span>
                                     <span style={{ marginLeft: '5px', flex: 1 }}>{contact.value}</span>
@@ -351,19 +445,207 @@ const Room = () => {
                     </div>
                 </div>
             )}
+            
             {isUpdateRoomModalOpen && (
                 <div onClick={handleCloseUpdateModal} style={modalOverlayStyle}>
                     <div onClick={(e) => e.stopPropagation()} style={modalCardStyle}>
+                        <p style={titleStyle}>กรอกข้อมูลที่ต้องการแก้ไข</p>
+                        {/* แก้ชื่อห้อง */}
+                        <div className="findRoomEachFormStyle">
+                            <label> 📝 ชื่อห้อง :</label>
+                                <input
+                                    type="text"
+                                    value={editForm?.roomName || ""}
+                                    onChange={(e) => setEditForm({ ...editForm, roomName: e.target.value})}
+                                    className="selectModalStyle"
+                                ></input> 
+                        </div>
                         
+                        {/* แก้ description */}
+                        <div className="findRoomEachFormStyle">
+                            <label> 📑 รายละเอียด :</label>
+                                <input
+                                    type="text"
+                                    value={editForm?.description || ""}
+                                    onChange={(e) => setEditForm({ ...editForm, description: e.target.value})}
+                                    className="selectModalStyle"
+                                ></input>
+                        </div>
+                        
+                        {/* แก้ชื่อเกม */}
+                        <div className="findRoomEachFormStyle">
+                            <label htmlFor="game-select"> 🕹️ เลือกเกม : </label>
+                                <select
+                                    id="game-select"
+                                    value={editForm?.gameName}
+                                    onChange={(e) => setEditForm({...editForm, gameName: e.target.value})}
+                                    className="selectModalStyle"
+                                >
+                                    <option value="">-- กรุณาเลือกเกม --</option>
+                                    <option value="LOL">League of Legends</option>
+                                    <option value="POE2">Path of Exile 2</option>
+                                    <option value="Valorant">Valorant</option>
+                                </select>
+                        </div>
+
+                        {/* เงื่อนไขว่าเกมไหนมีแรงค์จึงจะให้กรอกแรงค์ */}
+                        {(editForm?.gameName === "LOL" || editForm?.gameName === "Valorant") && (
+                            <div className="findRoomEachFormStyle">
+                                <label htmlFor="rank-select"> 🏆 เลือกแรงค์ : </label>
+                                <select
+                                    id="rank-select"
+                                    value={String(editForm.rank)}
+                                    onChange={(e) => setEditForm({...editForm, rank: Number(e.target.value)})}
+                                    className="selectModalStyle"
+                                >
+                                    <option value="0">-- เลือกแรงค์ --</option>
+                                    {GAME_RANKS[editForm?.gameName]?.map((r) =>(
+                                        <option key={r.id} value={r.id}>
+                                            {r.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
+                        
+                        {/* server */}
+                        <div className="findRoomEachFormStyle">
+                                <label htmlFor="server-select"> 🌍 เลือกเซิร์ฟเวอร์ :</label>
+                                    <select
+                                    id="server-select"
+                                    value={editForm?.server}
+                                    onChange={(e) => setEditForm({...editForm, server : e.target.value})}
+                                    className="selectModalStyle"
+                                    >
+                                        <option value="">-- กรุณาเลือกเซิร์ฟเวอร์ --</option>
+                                        <option value="SEA">Southeast Asia</option>
+                                        <option value="EU">Europe</option>
+                                        <option value="NA">North America</option>
+                                        <option value="OCE">Oceania</option>
+                                        <option value="LATAM">Latin America</option>
+                                        <option value="MEA">Middle East & Africa</option>
+
+                                    </select>
+                        </div>
+
+                        {/* hasMic */} 
+                        <div className="findRoomEachFormStyle">                   
+                            <label htmlFor="hasMic-input"> 🎙️ มีไมค์ : </label>
+                            <select
+                                id="hasMic-input"
+                                value={String(editForm?.hasMic)}
+                                onChange={(e) => setEditForm({...editForm, hasMic: e.target.value === "true"})}
+                                className="selectModalStyle"
+                            >
+                                <option value="">-- กรุณาเลือก --</option>
+                                <option value="true"> มีไมค์ </option>
+                                <option value="false"> ไม่มีไมค์ </option>    
+                            </select>
+                        </div>
+                        
+                        {/* languages */}
+                        <div className="findRoomEachFormStyle">
+                            <label> 🗣️ ภาษา : </label>
+                                <div style={{ display: 'flex', gap: '15px', marginTop: '5px'}}>
+
+                                    {/* ภาษาไทย */}
+                                    <label style={{ cursor: 'pointer' }}>
+                                        <input 
+                                            type="checkbox"
+                                            checked={ editForm?.languages.includes("TH") }
+                                            onChange={() => handleLanguageChange("TH")}
+                                        /> TH (ภาษาไทย)
+                                    </label> 
+                                    {/* ภาษาอังกฤษ */}
+                                    <label style={{ cursor: 'pointer' }}>
+                                        <input 
+                                            type="checkbox"
+                                            checked={ editForm?.languages.includes("EN") }
+                                            onChange={() => handleLanguageChange("EN")}
+                                        /> EN (English)
+                                    </label>    
+                                </div>          
+                               
+                        </div>
+
+                        {/* จำนวนสมาชิก */}
+                        <div className="findRoomEachFormStyle">
+                                <label htmlFor="maxplayer-input"> 👨‍👩‍👧‍👦 จำนวนสมาชิกสูงสุด : </label>
+                                <input
+                                    id="maxplayer-input"
+                                    type="number"
+                                    min="2"
+                                    max="10"
+                                    value={editForm?.maxPlayer === 0 ? "" : editForm?.maxPlayer}
+                                    onChange={(e) => setEditForm({...editForm, maxPlayer : (Number(e.target.value))})}
+                                    placeholder="กรุณาระบุจำนวนคน เช่น 5"
+                                    className="selectModalStyle"
+                                />
+                        </div>
+
+                        {/* minRating */}
+                        <div className="findRoomEachFormStyle">
+                                <label htmlFor="minrating-input"> 🙂 ระบุคะแนน rating ขั้นต่ำ : </label>
+                                <input
+                                    id="minrating-input"
+                                    type="number"
+                                    min="0"
+                                    max="100"
+                                    value={editForm?.minRating === 0 ? "" : editForm?.minRating}
+                                    onChange={(e) => setEditForm({...editForm, minRating : (Number(e.target.value))})}
+                                    placeholder="กรุณาระบุคะแนนความประพฤติขั้นต่ำ 0-100 คะแนน"
+                                    className="selectModalStyle"
+                                />
+                        </div>
+                        
+                        {/* เวลาเล่น */}
+                        <div className="findRoomEachFormStyle">
+                            {/* playTimeStart */}
+                            <label htmlFor="playtimestart-input"> 🕘 เวลาเริ่มเล่น : </label>
+                            
+                            <input
+                                id="playtimestart-input"
+                                type="datetime-local"
+                                value={editForm?.playTime?.start}
+                                onChange={(e) => setEditForm({
+                                    ...editForm, 
+                                    playTime: {
+                                        ...editForm.playTime, 
+                                            start : e.target.value 
+                                        }
+                                    })}
+                                className="calenderStyle"
+                                /> 
+                        </div>               
+                        <div className="findRoomEachFormStyle">
+                            {/* playTimeEnd */}
+                            <label htmlFor="playtimeend-input"> 🕛 เวลาเลิกล่น : </label>
+                            <input
+                                id="playtimeend-input"
+                                type="datetime-local"
+                                value={editForm?.playTime?.end}
+                                onChange={(e) => setEditForm({
+                                    ...editForm, playTime : {
+                                        ...editForm.playTime,
+                                        end: e.target.value
+                                    }
+                                })}
+                                className="calenderStyle"
+                                />
+                        </div>
+                        <div style={{marginTop:'15px', marginBottom:'15px', display:'flex', justifyContent:'center', gap: '150px'}}>    
+                            <button className="findRoomModalButton" onClick={handleUpdateRoom}> 💾 อัพเดท </button>
+                            <button className="findRoomModalButton" onClick={handleCloseUpdateModal}> ❌ ยกเลิก </button>
+                        </div>
                     </div>         
                 </div>
-            
             )}
-
         {/* แท๊กปิดสุดท้าย */}
         </div>
     )
 }
+
+
 const containerStyle = {
     display: 'flex',
     flexDirection: 'column',
