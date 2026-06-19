@@ -254,18 +254,28 @@ function Lobby(){
         }
     }
     const handleJoinRoom = async (roomId) => {
-        //token
-        const token = localStorage.getItem('token');
-        const config = {
-            headers : {
-                Authorization : `Bearer ${token}`
-            }
-        }
+        
         try {
-            const response = await axios.post(`http://localhost:5000/api/party/join-room/${roomId}`, config);
-            const { data } = response.data
-            navigate(`room/${data._id}`)
+            //token
+            const token = localStorage.getItem('token');
+           
 
+            const responseHttp = await fetch(`http://localhost:5000/api/party/join-room/${roomId}`, {
+                method: 'POST',
+                headers : {
+                    'Authorization' : `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                keepalive: true
+            });
+            const response = await responseHttp.json(); 
+            if (responseHttp.ok){
+                const { data} = response
+                navigate(`/room/${data._id}`)
+            } else {
+                const { message } = response
+                alert(`❌ เกิดข้อผิดพลาด : ${message}`)
+            }
         } catch (error) {
             console.error("Join Room Error", error)
         }
@@ -329,7 +339,7 @@ function Lobby(){
                         <p style={{marginLeft: '10px'}}>👨‍👩‍👧‍👦 สมาชิก: {room.members?.length}/{room.maxPlayer}</p>
                         
                         {/* ปุ่มกดที่จะพาเราเปลี่ยนหน้าไปยังห้องนั้น ๆ พร้อมแนบ ID ไปด้วย */}
-                        <button className="joinRoomButton" onClick={() => navigate(`/room/${room._id}`)}>
+                        <button className="joinRoomButton" onClick={() => handleJoinRoom(room._id)}>
                             เข้าร่วมปาร์ตี้
                         </button>
                     </div>
@@ -720,6 +730,7 @@ const modalCardStyle = {
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',
+    alignItems: 'center',
     gap: '10px',
     width: '800px'
 };

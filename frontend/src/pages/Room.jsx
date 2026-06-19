@@ -1,10 +1,18 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import '../button.css';
 
-// note
-// 1.update languages bug when click the whole page is turn green
+//note
+// เขียน css ของ modalgetOtherProfile (ตกแต่ง)ในหน้า room 
+
+// test สร้างห้องแล้วให้คนอื่นกดเข้ามาทำทั้งหมดผ่านหน้าเว็บ อย่าแก้ db โดยตรง
+// เพื่อเช็คว่าทุกอย่างรันไปถูกต้องไหม
+// ที่ต้องเช็ค 1.ตอนกดออกจากห้อง ไอดีเราหลุดออกจากห้องใน db ยัง
+// 2.หลังจากกดออกจากห้องแล้ว ไอดีหัวเปลี่ยนไหม มันควรจะย้ายไปคนต่อไป
+// 3.ลองกดเข้าห้องไปใหม่ดูว่าสีหัวห้องกับเมมเบอร์ต่างกันไหม (วันนี้ไม่ต่างกันเพราะว่าเราเคยแก้ข้อมูลที่ db โดยตรง)
+
+// ทำ getOtherProfile ที่หน้า lobby ด้วย ทำของหน้า room ให้เสร็จก่อนจจะได้ลอกเอา css มาได้เลย
 const GAME_RANKS = {
     "LOL": [
         { id: 1, name: "Iron4"},
@@ -77,6 +85,7 @@ const Room = () => {
     // 🕵️‍♂️ ดึง roomId จาก URL ออกมาโชว์เพื่อความชัวร์ว่าส่งมาถูกอันไหม
     const { roomId } = useParams(); 
     const navigate = useNavigate();
+    const location = useLocation();
 
 
     const [ room, setRoom ] = useState(null)
@@ -93,6 +102,7 @@ const Room = () => {
         if (!token) {
             alert("กรุณาเข้าสู่ระบบก่อนใช้งาน");
             navigate('/login');
+            
 
         }   
         const fetchAndCheckStatus = async () => {
@@ -143,8 +153,15 @@ const Room = () => {
             
             const autoLeaveRoom = async() => {
                 try {
-                    await axios.post(`http://localhost:5000/api/party/leave-room/${roomId}`, {
-                        headers: { Authorization: `Bearer ${token}` }
+                    const token = localStorage.getItem('token');
+
+                    fetch(`http://localhost:5000/api/party/leave-room/${roomId}`, {
+                        method: 'POST', // หรือ POST ตามที่หลังบ้านเซ็ตไว้
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        keepalive: true // 🔥 สลักสลักล็อกตัวนี้ไว้! เบราว์เซอร์จะไม่กล้าตัดสายเด็ดขาดแม้ปิดเว็บไปแล้ว
                     });
                     console.log("🧹 ระบบทำความสะอาด: สั่งอัปเดตใน DB เรียบร้อยหลังย้ายหน้าหนี")
                 } catch (err) {
@@ -152,8 +169,13 @@ const Room = () => {
                 }
             };
             
-            if (roomId) {
+
+            const currentPath = location?.pathname || '';
+
+            if (roomId && !currentPath.includes('/room')) {
                 autoLeaveRoom();
+            } else {
+                console.log(" ระบบเซฟตี้ทำงาน: ตรวจเจอ Path ซ้อนหรือรันเบิ้ล สกัดขาไม่ให้ยิงเตะตัวเอง!")
             }
         }
     }, [roomId]);
@@ -172,6 +194,7 @@ const Room = () => {
             const { data } = response.data
             setSelectedProfile(data)
             setIsProfileModalOpen(true)
+            
 
         } catch (error) {
             console.error("Get Profile Error", error)
@@ -255,24 +278,30 @@ const Room = () => {
     const handleLeaveRoom = async() => {
         const confirmLeave = window.confirm(`คุณต้องการที่จะออกจากห้องใช่หรือไม่?`)
         if (confirmLeave) {
-            const token = localStorage.getItem('token');
-            const config = {
-                headers : {
-                    Authorization : `Bearer ${token}`
-                }
-            }
             try{
-                const response = await axios.post(`http://localhost:5000/api/party/leave-room/${roomId}`, config)
-                if (response.data.success) {
-                    alert(response.data.message)
+                const token = localStorage.getItem('token');
+                const responseHttp = await fetch(`http://localhost:5000/api/party/leave-room/${roomId}`, {
+                        method: 'POST', // หรือ POST ตามที่หลังบ้านเซ็ตไว้
+                        headers: {
+                                    'Authorization': `Bearer ${token}`,
+                                    'Content-Type': 'application/json'
+                        },
+                        keepalive: true // 🔥 สลักสลักล็อกตัวนี้ไว้! เบราว์เซอร์จะไม่กล้าตัดสายเด็ดขาดแม้ปิดเว็บไปแล้ว
+                });
+                const response = await responseHttp.json();
+                if (responseHttp.ok) {
                     navigate('/lobby')
+                } else {
+                    const { message } = response
+                    alert(`❌ เกิดข้อผิดพลาด : ${message}`)
                 }
             } catch (error) {
                 console.error("Leave Room Error", error)
-            } 
-
+            }
+        
         }
-    }   
+    }
+    
 
     const handleChangeHost = async(playerName, playerId) => {
         const confirmChangeHost = window.confirm(`คุณแน่ใจหรือไม่ว่าจะให้คุณ [ ${playerName} ] เป็นหัวหน้าห้อง?`);
@@ -302,12 +331,22 @@ const Room = () => {
         setIsUpdateRoomModalOpen(false)
     }
     const handleLanguageChange = (langCode) => {
+        if (!editForm || !editForm.languages) return;
+
         if (editForm?.languages.includes(langCode)) {
-            setEditForm(editForm?.languages.filter(item => item !== langCode))
+            setEditForm({
+                ...editForm,
+                languages : editForm.languages.filter(item => item !== langCode)})
         } else {
-            setEditForm(editForm?.push(langCode))
+            setEditForm({
+                ...editForm, 
+                languages : [ ...editForm.languages, langCode ]})
         }
-    }  
+    }
+    
+    
+
+   
     const handleOpenUpdateModal = () => {
         setEditForm({ ...room });
         setIsUpdateRoomModalOpen(true);
@@ -345,11 +384,11 @@ const Room = () => {
                     // กล่องใส่สมาชิกแต่ละคน
                 <div style={memberContainerStyle} key={member._id} onClick={() => handleGetOtherProfile(member._id)}>
                     {/* กล่องใส่รูปโปรไฟล์ */}
-                    <div style={avatarWrapperStyle}>
+                    <div style={lobbyAvatarWrapperStyle}>
                         <img
                             src={member.profileImage}
                             alt={member.displayName}
-                            style={avatarStyle}
+                            style={lobbyAvatarStyle}
                             />
                     </div>
 
@@ -410,7 +449,7 @@ const Room = () => {
             </div>
 
 
-            { isProfileModalOpen &&(
+            { isProfileModalOpen && (
                 <div onClick={handleCloseProfileModal} style={modalOverlayStyle}>
                     <div onClick={(e) => e.stopPropagation()} style={modalCardStyle}>
                         <div style={avatarWrapperStyle}>
@@ -421,7 +460,7 @@ const Room = () => {
                             />
                         </div>
                         <h2 style={displayNameTextStyle}>{selectedProfile?.displayName}</h2>
-                        <span style={ratingStyle}>⭐ เรตติ้งของคุณ: {selectedProfile?.rating || 0}/100</span>
+                        <span>⭐ เรตติ้งของคุณ: {selectedProfile?.rating.score || 0}/100</span>
                         <h3> คำอธิบายเพิ่มเติม </h3>
                         <p>{selectedProfile?.description}</p>
                         <h3> แท๊ก </h3>
@@ -669,9 +708,11 @@ const memberSectionStyle = {
     gap: '50px',
     
 };
+
+//ของหน้าดึงโปรไฟล์
 const avatarWrapperStyle ={ 
-    width: '90px',
-    height: '90px',
+    width: '150px',
+    height: '150px',
     borderRadius: '50%',
     backgroundColor: 'rgba(255, 255, 255, 0.2)', // วงแหวนกระจกฝ้าล้อมรอบรูปโปรไฟล์
     display: 'flex',
@@ -682,11 +723,33 @@ const avatarWrapperStyle ={
     boxShadow: '0 4px 10px rgba(0,0,0,0.15)'
 };
 const avatarStyle = {
-    width: '60px',
-    height: '60px',
+    width: '120px',
+    height: '120px',
     borderRadius: '50%',
     objectFit: 'cover'
 };
+
+//ของ lobby
+const lobbyAvatarWrapperStyle ={ 
+    width: '100px',
+    height: '100px',
+    borderRadius: '50%',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)', // วงแหวนกระจกฝ้าล้อมรอบรูปโปรไฟล์
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: '15px',
+    border: '3px solid white',
+    boxShadow: '0 4px 10px rgba(0,0,0,0.15)'
+};
+const lobbyAvatarStyle = {
+    width: '70px',
+    height: '70px',
+    borderRadius: '50%',
+    objectFit: 'cover'
+};
+
+
 const buttonSectionStyle = {
     display: 'flex',
     flexDirection: 'row',
@@ -710,7 +773,10 @@ const modalOverlayStyle = {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 9999 // มั่นใจได้ว่าจะไม่มีอะไรลอยทับหน้าต่างนี้
+    zIndex: 9999, // มั่นใจได้ว่าจะไม่มีอะไรลอยทับหน้าต่างนี้
+
+    padding: '40px 30px',
+    overflowY: 'auto'
 };
 const modalCardStyle = {
     backgroundImage:"linear-gradient(135deg, rgb(161, 210, 255) 0%, rgb(245, 245, 245) 50%, rgb(250, 186, 158) 100%)", 
@@ -719,8 +785,12 @@ const modalCardStyle = {
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',
-    gap: '10px',
-    width: '800px'
+    alignItems: 'center',
+    gap: '15px',
+    width: '100%',
+    maxWidth: '700px',
+    boxShadow: '0 20px 60px rgba(16, 26, 61, 0.53)',
+    maxHeight: '100%'
 };
 
 const titleStyle ={
