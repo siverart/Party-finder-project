@@ -210,7 +210,7 @@ const Room = () => {
         }
         
         try {
-            const response = await axios.put(`http://localhost:5000/api/party/complete-room/${roomId}`, config);
+            const response = await axios.put(`http://localhost:5000/api/party/complete-room/${roomId}`, {},config);
             
             const { message } = response.data
             alert(message)
@@ -264,7 +264,7 @@ const Room = () => {
             }
     
             try {
-                const response = await axios.post(`http://localhost:5000/api/party/kick-room/${roomId}/${playerId}`, config)
+                const response = await axios.post(`http://localhost:5000/api/party/kick-player/${roomId}/${playerId}`, {}, config)
                 if (response.data.success) {
                     alert(response.data.message)
                 }
@@ -313,7 +313,7 @@ const Room = () => {
                 }
             }
             try {
-                const response = await axios.post(`http://localhost:5000/api/party/change-host/${roomId}/${playerId}`, config);
+                const response = await axios.post(`http://localhost:5000/api/party/change-host/${roomId}/${playerId}`, {},config);
                 if (response.data.success) {
                     alert(response.data.message)
                     setRoom(response.data.data)
