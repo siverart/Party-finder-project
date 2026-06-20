@@ -280,21 +280,19 @@ const Room = () => {
         if (confirmLeave) {
             try{
                 const token = localStorage.getItem('token');
-                const responseHttp = await fetch(`http://localhost:5000/api/party/leave-room/${roomId}`, {
-                        method: 'POST', // หรือ POST ตามที่หลังบ้านเซ็ตไว้
-                        headers: {
-                                    'Authorization': `Bearer ${token}`,
-                                    'Content-Type': 'application/json'
-                        },
-                        keepalive: true // 🔥 สลักสลักล็อกตัวนี้ไว้! เบราว์เซอร์จะไม่กล้าตัดสายเด็ดขาดแม้ปิดเว็บไปแล้ว
-                });
-                const response = await responseHttp.json();
-                if (responseHttp.ok) {
-                    navigate('/lobby')
-                } else {
-                    const { message } = response
-                    alert(`❌ เกิดข้อผิดพลาด : ${message}`)
+                const config = {
+                    headers: {
+                    Authorization: `Bearer ${token}`
+                    }
                 }
+                const response = await axios.post(`http://localhost:5000/api/party/leave-room/${roomId}`, {}, config);
+                        
+                
+                if (response.data.success){
+                    navigate('/lobby')
+                }
+                    
+                
             } catch (error) {
                 console.error("Leave Room Error", error)
             }
