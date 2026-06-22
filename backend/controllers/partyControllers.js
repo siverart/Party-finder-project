@@ -313,6 +313,14 @@ const completeRoom = async (req, res) => {
         room.roomStatus = 'complete';
         await room.save();
 
+        // ปรับสถานะห้องของทุกคนกลับเป็น null 
+        const allParticipants = [room.host, ...room.members];
+        await User.updateMany(
+            { _id: { $in: allParticipants} },
+            { $set: {currentRoom: null } }
+        );
+        
+
         res.status(200).json({
             success: true,
             message: "จบการเล่นและปิดห้องปาร์ตี้สำเร็จ!",
@@ -477,6 +485,9 @@ const leaveRoom = async (req, res) => {
         const room = await Party.findById(roomId);
         if (!room) return res.status(404).json({ success: false, message: "ไม่พบห้อง" });
 
+        if (room.roomStatus === 'complete') {
+            return res.status(200).json({ success : true, message: "รับทราบการออกจากห้องที่จบแล้ว"})
+        }
         //ดึงสมาชิกออกจากห้องก่อนไม่ว่าจะเป็นโฮสต์หรือสมาชิก
         room.members = room.members.filter(memberId => memberId.toString() !== playerId);
 

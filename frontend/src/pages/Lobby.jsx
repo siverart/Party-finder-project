@@ -258,24 +258,18 @@ function Lobby(){
         try {
             //token
             const token = localStorage.getItem('token');
-           
-
-            const responseHttp = await fetch(`http://localhost:5000/api/party/join-room/${roomId}`, {
-                method: 'POST',
+            const config = {
                 headers : {
-                    'Authorization' : `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                keepalive: true
-            });
-            const response = await responseHttp.json(); 
-            if (responseHttp.ok){
-                const { data} = response
-                navigate(`/room/${data._id}`)
-            } else {
-                const { message } = response
-                alert(`❌ เกิดข้อผิดพลาด : ${message}`)
+                    Authorization : `Bearer ${token}`
+                }
             }
+
+            const response = await axios.post(`http://localhost:5000/api/party/join-room/${roomId}`, {}, config) 
+            if (response.data.success) {
+                navigate(`/room/${response.data?.data?._id}`)
+            }
+            
+            
         } catch (error) {
             console.error("Join Room Error", error)
         }

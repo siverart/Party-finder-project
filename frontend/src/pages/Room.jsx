@@ -1,18 +1,9 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import '../button.css';
 
-//note
-// เขียน css ของ modalgetOtherProfile (ตกแต่ง)ในหน้า room 
 
-// test สร้างห้องแล้วให้คนอื่นกดเข้ามาทำทั้งหมดผ่านหน้าเว็บ อย่าแก้ db โดยตรง
-// เพื่อเช็คว่าทุกอย่างรันไปถูกต้องไหม
-// ที่ต้องเช็ค 1.ตอนกดออกจากห้อง ไอดีเราหลุดออกจากห้องใน db ยัง
-// 2.หลังจากกดออกจากห้องแล้ว ไอดีหัวเปลี่ยนไหม มันควรจะย้ายไปคนต่อไป
-// 3.ลองกดเข้าห้องไปใหม่ดูว่าสีหัวห้องกับเมมเบอร์ต่างกันไหม (วันนี้ไม่ต่างกันเพราะว่าเราเคยแก้ข้อมูลที่ db โดยตรง)
-
-// ทำ getOtherProfile ที่หน้า lobby ด้วย ทำของหน้า room ให้เสร็จก่อนจจะได้ลอกเอา css มาได้เลย
 const GAME_RANKS = {
     "LOL": [
         { id: 1, name: "Iron4"},
@@ -85,7 +76,7 @@ const Room = () => {
     // 🕵️‍♂️ ดึง roomId จาก URL ออกมาโชว์เพื่อความชัวร์ว่าส่งมาถูกอันไหม
     const { roomId } = useParams(); 
     const navigate = useNavigate();
-    const location = useLocation();
+    
 
 
     const [ room, setRoom ] = useState(null)
@@ -117,6 +108,16 @@ const Room = () => {
                     
                     const currentRoom = response.data.data;
                     console.log("📦 ข้อมูลดิบจาก Express:", response.data.data)
+
+                    // เด้งคนออกตอนห้องจบแล้วหรือโดนยกเลิก
+                    if (currentRoom && (currentRoom.roomStatus === 'complete' || currentRoom.roomStatus === 'cancel') ) {
+                        alert("ห้องนี้ได้สิ้นสุดภารกิจหรือถูกยกเลิกแล้ว ระบบจะนำคุณกลับสู่หน้าล็อบบี้");
+                        clearInterval(checkStatus); // สั่งทำลายลูป 3 วิทิ้ง 
+                        navigate('/lobby');
+                        return; // จบการทำงานรอบนี้ทันที ไม่ต้องเซ็ต State ต่อ
+                    }
+
+                    //logic เช็คว่ายังอยู่ในห้องไหม
                     const stillInRoom = currentRoom.members?.some(m => m._id === myUserId);
                     const isHostNow = currentRoom.host?._id === myUserId;
     
@@ -127,6 +128,8 @@ const Room = () => {
                     } else {
                         setRoom(currentRoom); // 🌟 ยิงมาปุ๊บ ข้อมูลห้องก็อัปเดตลงหน้าจอทันที!
                     }
+                    
+                    
                 } 
             } catch (error) {
                 console.error("Error polling room status", error);
@@ -147,6 +150,8 @@ const Room = () => {
         // 🎯 3. ส่งหน้าที่ต่อให้ setInterval ยิงซ้ำให้ทุกๆ 3 วินาทีหลังจากนั้น
         const checkStatus = setInterval(fetchAndCheckStatus, 3000);
         
+        
+
         // ตรงนี้จะทำงานก็ต่อเมื่อ user ออกจากหน้านี้แล้วหน้านี้กำลังจะปิดตัวลง
         return () => {
             clearInterval(checkStatus); // สั่งหยุด loop 3 วิ
@@ -170,9 +175,9 @@ const Room = () => {
             };
             
 
-            const currentPath = location?.pathname || '';
+            
 
-            if (roomId && !currentPath.includes('/room')) {
+            if (roomId ) {
                 autoLeaveRoom();
             } else {
                 console.log(" ระบบเซฟตี้ทำงาน: ตรวจเจอ Path ซ้อนหรือรันเบิ้ล สกัดขาไม่ให้ยิงเตะตัวเอง!")
