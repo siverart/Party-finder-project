@@ -453,37 +453,68 @@ const Room = () => {
 
 
             { isProfileModalOpen && (
-                <div onClick={handleCloseProfileModal} style={modalOverlayStyle}>
-                    <div onClick={(e) => e.stopPropagation()} style={modalCardStyle}>
-                        <div style={avatarWrapperStyle}>
+                <div onClick={handleCloseProfileModal} style={profileModalOverlayStyle}>
+                    <div onClick={(e) => e.stopPropagation()} style={profileModalCardStyle}>
+            
+                        {/* ❌ ปุ่มปิดมุมขวาบนด่วนๆ ทันใจ */}
+                        <button onClick={handleCloseProfileModal} style={closeModalBtnStyle}>✕</button>
+
+                        {/* กล่องใส่รูปโปรไฟล์อัปเกรดความพรีเมียม */}
+                        <div style={profileAvatarWrapperStyle}>
                             <img 
                                 src={selectedProfile?.profileImage}
                                 alt="profile"
-                                style={avatarStyle}
+                                style={profileAvatarStyle}
                             />
                         </div>
-                        <h2 style={displayNameTextStyle}>{selectedProfile?.displayName}</h2>
-                        <span>⭐ เรตติ้งของคุณ: {selectedProfile?.rating.score || 0}/100</span>
-                        <h3> คำอธิบายเพิ่มเติม </h3>
-                        <p>{selectedProfile?.description}</p>
-                        <h3> แท๊ก </h3>
-                        {selectedProfile?.tags?.length > 0 && (
-                            selectedProfile?.tags.map((tag, index) => (
-                                <div key={index}>
-                                    <span>#{tag}</span>
-                                </div>
-                            )) 
-                        )}
-                        <h3> รายการติดต่อ </h3>
-                        {selectedProfile?.contacts?.length > 0 && (
-                            selectedProfile?.contacts.map((contact) => (
-                                <div key={contact._id}>
-                                    <span style={{ fontWeight: 'bold', color: '#4A6B64' }}>{contact.platform}:</span>
-                                    <span style={{ marginLeft: '5px', flex: 1 }}>{contact.value}</span>
-                                                                    
-                                </div>
-                            ))
-                        )}
+
+                        {/* ชื่อผู้เล่น */}
+                        <h2 style={profileNameStyle}>{selectedProfile?.displayName}</h2>
+            
+                        {/* กล่องคะแนน Rating คูลๆ */}
+                        <div style={profileRatingBadgeStyle}>
+                            ⭐ เรตติ้งความประพฤติ: <strong style={{color: '#df7777'}}>{selectedProfile?.rating?.score || 0}</strong> / 100
+                        </div>
+
+                        {/* รายละเอียดคำอธิบาย */}
+                        <div style={profileSectionBlockStyle}>
+                            <h3 style={profileSectionTitleStyle}>📝 คำอธิบายเพิ่มเติม</h3>
+                            <p style={profileDescriptionTextStyle}>
+                                {selectedProfile?.description || "ผู้เล่นคนนี้ยังไม่ได้ใส่คำอธิบายเพิ่มเติม"}
+                            </p>
+                        </div>
+
+                        {/* แท็กความสนใจ */}
+                        <div style={profileSectionBlockStyle}>
+                            <h3 style={profileSectionTitleStyle}>🏷️ แท็กความสนใจ</h3>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '5px' }}>
+                                {selectedProfile?.tags?.length > 0 ? (
+                                    selectedProfile.tags.map((tag, index) => (
+                                        <span key={index} style={profileTagBadgeStyle}>#{tag}</span>
+                                    )) 
+                                ) : (
+                                    <span style={{color: '#9c9ea7', fontSize: '14px'}}>ไม่มีแท็ก</span>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* รายการติดต่อ */}
+                        <div style={profileSectionBlockStyle}>
+                            <h3 style={profileSectionTitleStyle}>📱 ช่องทางการติดต่อ</h3>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '5px' }}>
+                                {selectedProfile?.contacts?.length > 0 ? (
+                                    selectedProfile.contacts.map((contact) => (
+                                        <div key={contact._id} style={profileContactItemStyle}>
+                                            <span style={profileContactPlatformStyle}>{contact.platform}</span>
+                                            <span style={profileContactValueStyle}>{contact.value}</span>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <span style={{color: '#9c9ea7', fontSize: '14px'}}>ไม่มีช่องทางการติดต่อสาธารณะ</span>
+                                )}
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             )}
@@ -712,25 +743,7 @@ const memberSectionStyle = {
     
 };
 
-//ของหน้าดึงโปรไฟล์
-const avatarWrapperStyle ={ 
-    width: '150px',
-    height: '150px',
-    borderRadius: '50%',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)', // วงแหวนกระจกฝ้าล้อมรอบรูปโปรไฟล์
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: '15px',
-    border: '3px solid white',
-    boxShadow: '0 4px 10px rgba(0,0,0,0.15)'
-};
-const avatarStyle = {
-    width: '120px',
-    height: '120px',
-    borderRadius: '50%',
-    objectFit: 'cover'
-};
+
 
 //ของ lobby
 const lobbyAvatarWrapperStyle ={ 
@@ -758,15 +771,7 @@ const buttonSectionStyle = {
     flexDirection: 'row',
     gap: '30px'
 }
-const memberCardStyle = {
-    
-    backgroundColor: 'rgb(212, 232, 236)',
-    borderRadius: '24px',
-    boxShadow: '0 10px 40px rgba(20, 28, 56, 0.49)',
-    padding: '30px 20px',
-    gap:'10px',
-    borderLeft: '6px solid rgb(219, 121, 108)'
-}
+
 
 // 🔒 สไตล์กล่องลอยกลางอากาศ (Modal CSS)
 const modalOverlayStyle = {
@@ -803,18 +808,154 @@ const titleStyle ={
     marginBottom: '13px',
     marginTop: '8px'
 }
-const displayNameTextStyle = {
-    fontSize: '26px',
-    margin: '0 0 5px 0',
-    fontWeight: 'bold',
-    letterSpacing: '0.5px'
-};  
 
-const ratingStyle = {
-    fontSize: '14px',
-    backgroundColor: 'rgba(0,0,0,0.2)',
-    padding: '4px 12px',
+// ฉากหลังดิมมืดแบบหรูหรานุ่มนวล
+const profileModalOverlayStyle = {
+    position: 'fixed',
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(20, 24, 41, 0.45)', // เน้นโทนน้ำเงินเข้มโปร่งแสง
+    backdropFilter: 'blur(8px)', // สั่งเบลอฉากหลังแบบ iOS สวยมาก
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 9999,
+    padding: '20px'
+};
+
+// การ์ดแสดงโปรไฟล์สไตล์สมูทพาสเทล
+const profileModalCardStyle = {
+    position: 'relative',
+    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(24df, 245, 245, 0.95) 100%)',
+    padding: "35px 30px", 
+    borderRadius: "28px",
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    width: '100%',
+    maxWidth: '450px', // กระชับให้พอดีกับแนวการ์ดโปรไฟล์
+    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+    maxHeight: '90vh',
+    overflowY: 'auto',
+    fontFamily: "'Kanit', sans-serif"
+};
+
+// ปุ่มกากบาทปิดมุมขวาบน
+const closeModalBtnStyle = {
+    position: 'absolute',
+    top: '15px',
+    right: '20px',
+    background: 'none',
+    border: 'none',
+    fontSize: '20px',
+    color: '#8e9aa8',
+    cursor: 'pointer',
+    transition: 'color 0.2s',
+};
+
+// กรอบวงแหวนรูปโปรไฟล์
+const profileAvatarWrapperStyle = {
+    width: '120px',
+    height: '120px',
+    borderRadius: '50%',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: '15px',
+    border: '4px solid #fff',
+    boxShadow: '0 10px 20px rgba(228, 148, 134, 0.3)', // เงาสีพีชจางๆ ตามสไตล์เว็บ
+    background: '#fff'
+};
+
+const profileAvatarStyle = {
+    width: '100%',
+    height: '100%',
+    borderRadius: '50%',
+    objectFit: 'cover'
+};
+
+const profileNameStyle = {
+    fontSize: '24px',
+    fontWeight: '700',
+    color: '#2c3e50',
+    margin: '0 0 8px 0'
+};
+
+// บาร์คะแนนเรตติ้งความประพฤติ
+const profileRatingBadgeStyle = {
+    fontSize: '13px',
+    backgroundColor: '#fff',
+    border: '1px solid #f9dbd5',
+    color: '#5c6b73',
+    padding: '6px 16px',
     borderRadius: '20px',
-    marginBottom: '15px'
+    marginBottom: '20px',
+    fontWeight: '500',
+    boxShadow: '0 2px 6px rgba(0,0,0,0.03)'
+};
+
+// บล็อกจัดหมวดหมู่ข้อมูล
+const profileSectionBlockStyle = {
+    width: '100%',
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
+    padding: '14px 18px',
+    borderRadius: '16px',
+    marginBottom: '12px',
+    border: '1px solid rgba(231, 215, 209, 0.4)',
+    boxSizing: 'border-box'
+};
+
+const profileSectionTitleStyle = {
+    fontSize: '14px',
+    fontWeight: '600',
+    color: '#718096',
+    margin: '0 0 6px 0',
+};
+
+const profileDescriptionTextStyle = {
+    fontSize: '14px',
+    color: '#4a5568',
+    margin: 0,
+    lineHeight: '1.5',
+    wordBreak: 'break-word'
+};
+
+// ดีไซน์เม็ดแท็กสีหวานๆ
+const profileTagBadgeStyle = {
+    backgroundColor: '#fdeee9',
+    color: '#e49486',
+    padding: '4px 12px',
+    borderRadius: '12px',
+    fontSize: '12px',
+    fontWeight: '500',
+    border: '1px solid #fcdbd0'
+};
+
+// ไอเท็มช่องทางติดต่อสื่อสาร
+const profileContactItemStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    padding: '8px 12px',
+    borderRadius: '10px',
+    border: '1px solid #edf2f7'
+};
+
+const profileContactPlatformStyle = {
+    fontSize: '12px',
+    fontWeight: '700',
+    color: '#29414b', // ดึงสีเข้มจากปุ่มหลักของคุณโอ๊ตมาคุมธีม
+    backgroundColor: '#e2e8f0',
+    padding: '3px 8px',
+    borderRadius: '6px',
+    marginRight: '10px',
+    minWidth: '70px',
+    textAlign: 'center'
+};
+
+const profileContactValueStyle = {
+    fontSize: '13px',
+    color: '#4a5568',
+    fontWeight: '500',
+    userSelect: 'all' // ลัดให้ยูสเซอร์คลิกทีเดียวคลุมข้อความก๊อปปี้ไปแอดเพื่อนได้เลย
 };
 export default Room;

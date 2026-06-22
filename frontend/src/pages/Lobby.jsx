@@ -74,9 +74,11 @@ const GAME_RANKS = {
 function Lobby(){
     const [ allRoom, setAllRoom ] = useState([])
     const [ singleRoom, setSingleRoom ] = useState({})
-    const [ roomFromFind, setRoomFromFind ] = useState([])
+    const [ roomFromFind, setRoomFromFind ] = useState(null)
     const [ selectedProfile, setSelectedProfile ] = useState({})
     const [ isFindRoomModalOpen, setIsFindRoomModalOpen ] = useState(false)
+    const [ isShowRoomFromFindModalOpen, setIsShowRoomFromFindModalOpen] = useState(false)
+    const [ isShowRoomDetailModalOpen, setIsShowRoomDetailModalOpen ] = useState(null)
     const [ isProfileModalOpen, setIsProfileModalOpen ] = useState(false)
     const [ isCreateRoomModalOpen, setIsCreateRoomModalOpen ] = useState(false)
     //สำหรับรับ input สร้างห้อง กับ หาห้อง
@@ -135,6 +137,7 @@ function Lobby(){
             const { message, data } = response.data
             alert(message)
             setSingleRoom(data)
+            setIsShowRoomDetailModalOpen(true)
 
         } catch (error) {
             console.error('Error fetching room data', error)
@@ -219,8 +222,10 @@ function Lobby(){
         try {
             const response = await axios.post('http://localhost:5000/api/party/find-room', body, config)
             const { count, data } = response.data
+            if (count > 0) {
+                setRoomFromFind(data)
+            }
             alert(`พบห้องจำนวน ${count} ห้อง`)
-            setRoomFromFind(data)
             setGameName("")
             setRank(0)
             setServer("")
@@ -228,6 +233,7 @@ function Lobby(){
             setLanguages([])
             setPlayTimeStart("")
             setIsFindRoomModalOpen(false)
+            setIsShowRoomFromFindModalOpen(true)
 
 
         } catch (error) {
@@ -248,6 +254,7 @@ function Lobby(){
             
             const { data } = response.data
             setSelectedProfile(data)
+            setIsProfileModalOpen(true)
 
         } catch (error) {
             console.error("Get Profile Error", error)
@@ -296,6 +303,14 @@ function Lobby(){
         setMaxPlayer(0)
         setPlayTimeStart("")
         setPlayTimeEnd("")
+    }
+    const handleCloseShowRoomFromFindModal = async() => {
+        setIsShowRoomFromFindModalOpen(false)
+        setRoomFromFind(null)
+    }
+    const handleCloseProfileModal = async () => {
+        setIsProfileModalOpen(false)
+        setSelectedProfile({})
     }
     const handleLanguageChange = (langCode) => {
         if (languages.includes(langCode)) {
@@ -670,6 +685,52 @@ function Lobby(){
                 
                 </div>
             )}
+            {/* 🎯 modal แสดงห้องที่หาเจอ (เวอร์ชันซ่อมปีกกาเรียบร้อย) */}
+            { isShowRoomFromFindModalOpen && (
+                roomFromFind?.map((room) => {
+                    const currentBg = gameBackgrounds[room.gameName] || defaultBackground;
+    
+                    // ปั้นสไตล์แยกเฉพาะของการ์ดใบนี้
+                    const finalCardStyle = {
+                        ...roomCardStyle,
+                        backgroundImage: `linear-gradient(rgba(53, 145, 238, 0.46), rgba(223, 190, 163, 0.47)), url(${currentBg})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        color: '#fff'
+                    };
+        
+                    return (
+                        <div key={room._id} style={finalCardStyle} onClick={() => handleGetSingleRoom(room._id)}>
+                            <p style={{marginLeft: '10px'}}>📝 ชื่อห้อง: {room.roomName}</p>
+                            <p style={{marginLeft: '10px'}}>🎲 เกม: {room.gameName}</p>
+                            <p style={{marginLeft: '10px'}}>👨‍👩‍👧‍👦 สมาชิก: {room.members?.length}/{room.maxPlayer}</p>
+            
+                            {/* ปุ่มกดที่จะพาเราเปลี่ยนหน้าไปยังห้องนั้น ๆ พร้อมแนบ ID ไปด้วย */}
+                            <button className="joinRoomButton" onClick={() => handleJoinRoom(room._id)}>
+                                เข้าร่วมปาร์ตี้
+                            </button>
+                        </div>
+                    );
+                })
+            )}
+
+            {/* modal แสดงผลรายละเอียดห้อง */}
+            { isShowRoomDetailModalOpen && (
+                <div onClick={setIsShowRoomDetailModalOpen(false)} style={roomDetailModalOverlay}>
+                    <div onClick={(e) => e.stopPropagation()} style={roomDetailCardStyle}>
+                        <p style={titleStyle}>{singleRoom.roomName}</p>
+                        <div style={roomDetailSectionStyle}>
+                            <h3 style={roomDetailSectionTitleStyle}>รายละเอียด</h3>
+                            <p style={roomDetailDescriptionTextStyle}>{singleRoom.description}</p>
+                        </div>
+                        <div style={roomDetailSectionStyle}>
+                            <span> game : {singleRoom.gameName} </span>
+                        </div>
+                    </div> 
+                </div>
+            )}
+
+
         </div>
         
     );
