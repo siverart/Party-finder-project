@@ -77,8 +77,8 @@ function Lobby(){
     const [ roomFromFind, setRoomFromFind ] = useState(null)
     const [ selectedProfile, setSelectedProfile ] = useState({})
     const [ isFindRoomModalOpen, setIsFindRoomModalOpen ] = useState(false)
-    const [ isShowRoomFromFindModalOpen, setIsShowRoomFromFindModalOpen] = useState(false)
-    const [ isShowRoomDetailModalOpen, setIsShowRoomDetailModalOpen ] = useState(null)
+    const [ isRoomFromFindModalOpen, setIsRoomFromFindModalOpen] = useState(false)
+    const [ isRoomDetailModalOpen, setIsRoomDetailModalOpen ] = useState(false)
     const [ isProfileModalOpen, setIsProfileModalOpen ] = useState(false)
     const [ isCreateRoomModalOpen, setIsCreateRoomModalOpen ] = useState(false)
     //สำหรับรับ input สร้างห้อง กับ หาห้อง
@@ -134,10 +134,12 @@ function Lobby(){
                         Authorization: `Bearer ${token}`
                     }
                 });
-            const { message, data } = response.data
-            alert(message)
-            setSingleRoom(data)
-            setIsShowRoomDetailModalOpen(true)
+            if (response.data.success) {
+                const { data } = response.data
+                setSingleRoom(data)
+                setIsRoomDetailModalOpen(true)
+            }
+            
 
         } catch (error) {
             console.error('Error fetching room data', error)
@@ -233,7 +235,7 @@ function Lobby(){
             setLanguages([])
             setPlayTimeStart("")
             setIsFindRoomModalOpen(false)
-            setIsShowRoomFromFindModalOpen(true)
+            setIsRoomFromFindModalOpen(true)
 
 
         } catch (error) {
@@ -304,14 +306,16 @@ function Lobby(){
         setPlayTimeStart("")
         setPlayTimeEnd("")
     }
-    const handleCloseShowRoomFromFindModal = async() => {
-        setIsShowRoomFromFindModalOpen(false)
+    const handleCloseRoomFromFindModal = async() => {
+        setIsRoomFromFindModalOpen(false)
         setRoomFromFind(null)
     }
     const handleCloseProfileModal = async () => {
         setIsProfileModalOpen(false)
         setSelectedProfile({})
     }
+    
+    // กดเอาภาษาเข้าออกจาก room.lannguages [ "TH", "EN" ]
     const handleLanguageChange = (langCode) => {
         if (languages.includes(langCode)) {
             setLanguages(languages.filter(item => item !== langCode))
@@ -319,6 +323,19 @@ function Lobby(){
             setLanguages([...languages, langCode])
         }
     }
+
+    //ฟังชั่นแปลงรูปแบบเวลา
+    const formatGameTime = (isoString) => {
+        if (!isoString) return "";
+
+        const date = new Date(isoString);
+
+        return date.toLocaleString('th-TH', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        });
+    };
 
 
     {/* ส่วนแสดงผล */}
@@ -686,47 +703,198 @@ function Lobby(){
                 </div>
             )}
             {/* 🎯 modal แสดงห้องที่หาเจอ (เวอร์ชันซ่อมปีกกาเรียบร้อย) */}
-            { isShowRoomFromFindModalOpen && (
-                roomFromFind?.map((room) => {
-                    const currentBg = gameBackgrounds[room.gameName] || defaultBackground;
+            { isRoomFromFindModalOpen && (
+                <div onClick={handleCloseRoomFromFindModal} style={roomFromFindmodalOverlayStyle}>
+                    <div onClick={(e) => e.stopPropagation()} style={roomFromFindModalCardStyle}>
+                        {roomFromFind?.map((room) => {
+                        const currentBg = gameBackgrounds[room.gameName] || defaultBackground;
     
-                    // ปั้นสไตล์แยกเฉพาะของการ์ดใบนี้
-                    const finalCardStyle = {
-                        ...roomCardStyle,
-                        backgroundImage: `linear-gradient(rgba(53, 145, 238, 0.46), rgba(223, 190, 163, 0.47)), url(${currentBg})`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                        color: '#fff'
-                    };
+                        // ปั้นสไตล์แยกเฉพาะของการ์ดใบนี้
+                        const finalCardStyle = {
+                            ...roomCardStyle,
+                            backgroundImage: `linear-gradient(rgba(53, 145, 238, 0.46), rgba(223, 190, 163, 0.47)), url(${currentBg})`,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                            color: '#fff'
+                        };
         
-                    return (
-                        <div key={room._id} style={finalCardStyle} onClick={() => handleGetSingleRoom(room._id)}>
-                            <p style={{marginLeft: '10px'}}>📝 ชื่อห้อง: {room.roomName}</p>
-                            <p style={{marginLeft: '10px'}}>🎲 เกม: {room.gameName}</p>
-                            <p style={{marginLeft: '10px'}}>👨‍👩‍👧‍👦 สมาชิก: {room.members?.length}/{room.maxPlayer}</p>
+                        return (
+                            <div key={room._id} style={finalCardStyle} onClick={() => handleGetSingleRoom(room._id)}>
+                                <p style={{marginLeft: '10px'}}>📝 ชื่อห้อง: {room.roomName}</p>
+                                <p style={{marginLeft: '10px'}}>🎲 เกม: {room.gameName}</p>
+                                <p style={{marginLeft: '10px'}}>👨‍👩‍👧‍👦 สมาชิก: {room.members?.length}/{room.maxPlayer}</p>
             
-                            {/* ปุ่มกดที่จะพาเราเปลี่ยนหน้าไปยังห้องนั้น ๆ พร้อมแนบ ID ไปด้วย */}
-                            <button className="joinRoomButton" onClick={() => handleJoinRoom(room._id)}>
-                                เข้าร่วมปาร์ตี้
-                            </button>
-                        </div>
-                    );
-                })
+                                {/* ปุ่มกดที่จะพาเราเปลี่ยนหน้าไปยังห้องนั้น ๆ พร้อมแนบ ID ไปด้วย */}
+                                <button className="joinRoomButton" onClick={() => handleJoinRoom(room._id)}>
+                                    เข้าร่วมปาร์ตี้
+                                </button>
+                            </div>
+                        );
+                        })}
+
+                    </div>
+                </div>
+                
             )}
 
             {/* modal แสดงผลรายละเอียดห้อง */}
-            { isShowRoomDetailModalOpen && (
-                <div onClick={setIsShowRoomDetailModalOpen(false)} style={roomDetailModalOverlay}>
+            { isRoomDetailModalOpen && singleRoom && (
+                <div onClick={() => setIsRoomDetailModalOpen(false)} style={roomDetailOverlayStyle}>
                     <div onClick={(e) => e.stopPropagation()} style={roomDetailCardStyle}>
-                        <p style={titleStyle}>{singleRoom.roomName}</p>
-                        <div style={roomDetailSectionStyle}>
-                            <h3 style={roomDetailSectionTitleStyle}>รายละเอียด</h3>
-                            <p style={roomDetailDescriptionTextStyle}>{singleRoom.description}</p>
+                        
+                        {/* ปุ่มกากบาทปิดหน้าต่าง */}
+                        <button onClick={() => setIsRoomDetailModalOpen(false)} style={closeDetailBtnStyle}>✕</button>
+                        
+                        {/* ชื่อห้องปาร์ตี้ */}
+                        <p style={roomDetailTitleStyle}>{singleRoom.roomName}</p>
+
+                        {/* คำอธิบายปาร์ตี้เพิ่มเติม */}
+                        <div style={roomDescBlockStyle}>
+                            <span style={{ fontSize: '13px', fontWeight: '600', color: '#718096', display: 'block', marginBottom: '4px' }}>📝 รายละเอียดตี้</span>
+                            <p style={{ fontSize: '14px', color: '#4a5568', margin: 0, lineHeight: '1.5', wordBreak: 'break-word' }}>
+                                {singleRoom.description || "โฮสต์ไม่ได้ระบุรายละเอียดเพิ่มเติมไว้"}
+                            </p>
                         </div>
-                        <div style={roomDetailSectionStyle}>
-                            <span> game : {singleRoom.gameName} </span>
+
+                        {/* ตารางข้อมูลห้องแบบ Grid แบ่ง 2 ฝั่ง */}
+                        <div style={roomInfoGridStyle}>
+                            <div style={roomInfoItemStyle}>🎮 เกม: <strong>{singleRoom.gameName}</strong></div>
+                            <div style={roomInfoItemStyle}>⚔️ โหมด: <strong>{singleRoom.gameMode}</strong></div>
+                            <div style={roomInfoItemStyle}>🌐 เซิร์ฟเวอร์: <strong>{singleRoom.server}</strong></div>
+                            <div style={roomInfoItemStyle}>🗣️ ภาษา: <strong>{singleRoom.languages?.join(', ')}</strong></div>
+                            <div style={roomInfoItemStyle}>
+                                🎙️ ไมค์: <strong>{singleRoom.hasMic ? "ต้องการไมค์" : "ไม่ต้องมีไมค์"}</strong>
+                            </div>
+                            <div style={roomInfoItemStyle}>
+                                ⭐ เรตติ้งขั้นต่ำ: <strong>{singleRoom.minRating} คะแนน</strong>
+                            </div>
                         </div>
+
+                        {/* rank */}
+                        {(singleRoom.gameName === "LOL" || singleRoom.gameName === "Valorant") && (
+                            <div style={roomInfoGridStyle}>
+                                <p> rank : {
+                                GAME_RANKS[singleRoom?.gameName]
+                                ?.find(rank => rank.id === singleRoom.rankRequiment)
+                                ?.name
+                                }
+                                </p>
+                            </div>
+                        )}
+                        
+
+                        {/* เวลาเล่น (17.00 - 23.00 น.) เป็นเวลาไทย */}
+                        <div style={roomInfoGridStyle}>
+                            ⏱️ เวลารวมตี้: {formatGameTime(singleRoom.playTime?.start)} - {formatGameTime(singleRoom.playTime?.end)} น.
+                        </div>
+
+                        {/* บล็อกแสดงรายชื่อเมมเบอร์ในตี้ */}
+                        <div style={membersSectionStyle}>
+                            <h3 style={membersSectionTitleStyle}>👨‍👩‍👧‍👦 สมาชิกในปาร์ตี้ ({singleRoom.members?.length} / {singleRoom.maxPlayer})</h3>
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                {singleRoom.members?.map((member) => {
+                                    
+                                    const isHost = member._id === singleRoom.host?._id;
+
+                                    // Dynamic Style สำหรับแยกหัวห้องจากสมาชิก
+                                    const finalMemberCardStyle = {
+                                        ...memberItemStyle,
+                                        border: isHost ? '2px solid #e49486' : '1px solid #edf2f7',
+                                        backgroundColor: isHost ? '#fffaf9' : '#ffffff',
+                                        cursor: 'pointer'
+                                    };
+
+                                    return (
+                                        <div 
+                                            key={member._id} 
+                                            style={finalMemberCardStyle}
+                                            onClick={() => handleGetOtherProfile(member._id)}
+                                        >
+                                            <span style={{ fontWeight: isHost ? '700' : '500', color: '#2c3e50', fontSize: '14px' }}>
+                                                {isHost && "👑 "} {member.displayName}
+                                            </span>
+                                            {isHost && <span style={{ fontSize: '11px', backgroundColor: '#fdeee9', color: '#e49486', padding: '2px 8px', borderRadius: '8px', fontWeight: '600' }}>HOST</span>}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* ปุ่มกดเข้าร่วมตี้ด้านล่างสุด */}
+                        <button 
+                            className="joinRoomButton" 
+                            style={{ width: '100%', padding: '14px', borderRadius: '16px', fontSize: '16px', fontWeight: '600' }}
+                            onClick={() => handleJoinRoom(singleRoom._id)}
+                        >
+                            ยื่นคำขอเข้าร่วมปาร์ตี้
+                        </button>
                     </div> 
+                </div>
+            )}
+            { isProfileModalOpen && (
+                <div onClick={handleCloseProfileModal} style={profileModalOverlayStyle}>
+                    <div onClick={(e) => e.stopPropagation()} style={profileModalCardStyle}>
+            
+                        {/* ❌ ปุ่มปิดมุมขวาบนด่วนๆ ทันใจ */}
+                        <button onClick={handleCloseProfileModal} style={closeModalBtnStyle}>✕</button>
+
+                        {/* กล่องใส่รูปโปรไฟล์อัปเกรดความพรีเมียม */}
+                        <div style={profileAvatarWrapperStyle}>
+                            <img 
+                                src={selectedProfile?.profileImage}
+                                alt="profile"
+                                style={profileAvatarStyle}
+                            />
+                        </div>
+
+                        {/* ชื่อผู้เล่น */}
+                        <h2 style={profileNameStyle}>{selectedProfile?.displayName}</h2>
+            
+                        {/* กล่องคะแนน Rating คูลๆ */}
+                        <div style={profileRatingBadgeStyle}>
+                            ⭐ เรตติ้งความประพฤติ: <strong style={{color: '#df7777'}}>{selectedProfile?.rating?.score || 0}</strong> / 100
+                        </div>
+
+                        {/* รายละเอียดคำอธิบาย */}
+                        <div style={profileSectionBlockStyle}>
+                            <h3 style={profileSectionTitleStyle}>📝 คำอธิบายเพิ่มเติม</h3>
+                            <p style={profileDescriptionTextStyle}>
+                                {selectedProfile?.description || "ผู้เล่นคนนี้ยังไม่ได้ใส่คำอธิบายเพิ่มเติม"}
+                            </p>
+                        </div>
+
+                        {/* แท็กความสนใจ */}
+                        <div style={profileSectionBlockStyle}>
+                            <h3 style={profileSectionTitleStyle}>🏷️ แท็กความสนใจ</h3>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '5px' }}>
+                                {selectedProfile?.tags?.length > 0 ? (
+                                    selectedProfile.tags.map((tag, index) => (
+                                        <span key={index} style={profileTagBadgeStyle}>#{tag}</span>
+                                    )) 
+                                ) : (
+                                    <span style={{color: '#9c9ea7', fontSize: '14px'}}>ไม่มีแท็ก</span>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* รายการติดต่อ */}
+                        <div style={profileSectionBlockStyle}>
+                            <h3 style={profileSectionTitleStyle}>📱 ช่องทางการติดต่อ</h3>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '5px' }}>
+                                {selectedProfile?.contacts?.length > 0 ? (
+                                    selectedProfile.contacts.map((contact) => (
+                                        <div key={contact._id} style={profileContactItemStyle}>
+                                            <span style={profileContactPlatformStyle}>{contact.platform}</span>
+                                            <span style={profileContactValueStyle}>{contact.value}</span>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <span style={{color: '#9c9ea7', fontSize: '14px'}}>ไม่มีช่องทางการติดต่อสาธารณะ</span>
+                                )}
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
             )}
 
@@ -809,4 +977,304 @@ const gameBackgrounds = {
 // 💡 ทำรูปภาพ Default สำรองไว้ด้วย เผื่อกรณีหาชื่อเกมไม่เจอ หรือพิมพ์ชื่อเกมใหม่เข้ามา
 const defaultBackground = "/images/default-lobby.jpg";
 
+//roomDetail Modal Style modal 2
+// 🔒 ฉากหลังมืดแบบโปร่งแสงและเบลอ เพื่อโฟกัสตัว Modal Details
+const roomDetailOverlayStyle = {
+    position: 'fixed',
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(20, 24, 41, 0.5)', // โทนเข้มโปร่งแสงคุมโทนเว็บ
+    backdropFilter: 'blur(10px)', // สั่งเบลอฉากหลังแบบนุ่มนวล
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 9998,
+    padding: '20px'
+};
+
+// 🎴 ตัวการ์ดรายละเอียดห้อง (ดึงโทนไล่เฉดสีฟ้า-พีชจากสไตล์หลักของคุณโอ๊ตมาใช้)
+const roomDetailCardStyle = {
+    position: 'relative',
+    backgroundImage: "linear-gradient(135deg, rgb(190, 225, 255) 0%, rgb(250, 250, 250) 50%, rgb(255, 206, 184) 100%)", 
+    padding: "30px", 
+    borderRadius: "28px",
+    display: 'flex',
+    flexDirection: 'column',
+    width: '100%',
+    maxWidth: '550px', // กว้างกว่าโปรไฟล์นิดนึงเพื่อให้แสดงตารางและรายชื่อเมมเบอร์สวยๆ
+    maxHeight: '85vh',
+    overflowY: 'auto',
+    boxShadow: '0 20px 40px rgba(15, 23, 42, 0.15)',
+    fontFamily: "'Kanit', sans-serif",
+    boxSizing: 'border-box'
+};
+
+// ปุ่ม ✕ ปิดหน้าต่างมุมขวาบน
+const closeDetailBtnStyle = {
+    position: 'absolute',
+    top: '20px',
+    right: '25px',
+    background: 'none',
+    border: 'none',
+    fontSize: '22px',
+    color: '#718096',
+    cursor: 'pointer',
+    transition: 'color 0.2s',
+};
+
+// หัวข้อชื่อห้องปาร์ตี้
+const roomDetailTitleStyle = {
+    fontSize: '22px',
+    fontWeight: '700',
+    color: '#29414b', // สีน้ำเงินเข้มตัวหลักของคุณโอ๊ต
+    margin: '0 0 15px 0',
+    paddingRight: '30px', // เว้นพื้นที่ไม่ให้ชนปุ่มกากบาท
+    lineHeight: '1.4'
+};
+
+// บล็อกครอบข้อมูลทั่วไป (เช่น เกม โหมด ไมค์ เวลา)
+const roomInfoGridStyle = {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr', // แบ่งเป็น 2 คอลัมน์ซ้ายขวาเท่ากัน
+    gap: '12px',
+    marginBottom: '20px'
+};
+
+// ไอเท็มย่อยข้างใน Grid ข้อมูล
+const roomInfoItemStyle = {
+    backgroundColor: 'rgba(255, 255, 255, 0.65)',
+    padding: '12px 15px',
+    borderRadius: '14px',
+    border: '1px solid rgba(255, 255, 255, 0.5)',
+    fontSize: '14px',
+    color: '#4a5568',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    boxSizing: 'border-box'
+};
+
+// บล็อกครอบโซนรายชื่อสมาชิก (Members Section)
+const membersSectionStyle = {
+    backgroundColor: 'rgba(255, 255, 255, 0.4)',
+    padding: '20px',
+    borderRadius: '20px',
+    border: '1px solid rgba(231, 215, 209, 0.5)',
+    marginBottom: '25px',
+    boxSizing: 'border-box'
+};
+
+const membersSectionTitleStyle = {
+    fontSize: '15px',
+    fontWeight: '600',
+    color: '#29414b',
+    margin: '0 0 12px 0'
+};
+
+// รายการกล่องชื่อสมาชิกแต่ละคน (ที่เราจะเอาไป map และเช็กมงกุฎ)
+const memberItemStyle = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '12px 16px',
+    borderRadius: '12px',
+    marginBottom: '8px',
+    fontFamily: "'Kanit', sans-serif",
+    boxSizing: 'border-box',
+    transition: 'all 0.2s ease'
+};
+
+// กล่องข้อความรายละเอียด/คำอธิบายห้องเพิ่มเติม (Description)
+const roomDescBlockStyle = {
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    padding: '14px 18px',
+    borderRadius: '16px',
+    border: '1px solid rgba(231, 215, 209, 0.4)',
+    marginBottom: '25px',
+    boxSizing: 'border-box'
+};
+//End RoomDetail Modal Style
+
+//getOtherProfileModal modal 3(บนสุด)
+// ฉากหลังดิมมืดแบบหรูหรานุ่มนวล
+const profileModalOverlayStyle = {
+    position: 'fixed',
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(20, 24, 41, 0.45)', // เน้นโทนน้ำเงินเข้มโปร่งแสง
+    backdropFilter: 'blur(8px)', // สั่งเบลอฉากหลังแบบ iOS สวยมาก
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 9999,
+    padding: '20px'
+};
+
+// การ์ดแสดงโปรไฟล์สไตล์สมูทพาสเทล
+const profileModalCardStyle = {
+    position: 'relative',
+    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(24df, 245, 245, 0.95) 100%)',
+    padding: "35px 30px", 
+    borderRadius: "28px",
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    width: '100%',
+    maxWidth: '450px', // กระชับให้พอดีกับแนวการ์ดโปรไฟล์
+    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+    maxHeight: '90vh',
+    overflowY: 'auto',
+    fontFamily: "'Kanit', sans-serif"
+};
+
+// ปุ่มกากบาทปิดมุมขวาบน
+const closeModalBtnStyle = {
+    position: 'absolute',
+    top: '15px',
+    right: '20px',
+    background: 'none',
+    border: 'none',
+    fontSize: '20px',
+    color: '#8e9aa8',
+    cursor: 'pointer',
+    transition: 'color 0.2s',
+};
+
+// กรอบวงแหวนรูปโปรไฟล์
+const profileAvatarWrapperStyle = {
+    width: '120px',
+    height: '120px',
+    borderRadius: '50%',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: '15px',
+    border: '4px solid #fff',
+    boxShadow: '0 10px 20px rgba(228, 148, 134, 0.3)', // เงาสีพีชจางๆ ตามสไตล์เว็บ
+    background: '#fff'
+};
+
+const profileAvatarStyle = {
+    width: '100%',
+    height: '100%',
+    borderRadius: '50%',
+    objectFit: 'cover'
+};
+
+const profileNameStyle = {
+    fontSize: '24px',
+    fontWeight: '700',
+    color: '#2c3e50',
+    margin: '0 0 8px 0'
+};
+
+// บาร์คะแนนเรตติ้งความประพฤติ
+const profileRatingBadgeStyle = {
+    fontSize: '13px',
+    backgroundColor: '#fff',
+    border: '1px solid #f9dbd5',
+    color: '#5c6b73',
+    padding: '6px 16px',
+    borderRadius: '20px',
+    marginBottom: '20px',
+    fontWeight: '500',
+    boxShadow: '0 2px 6px rgba(0,0,0,0.03)'
+};
+
+// บล็อกจัดหมวดหมู่ข้อมูล
+const profileSectionBlockStyle = {
+    width: '100%',
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
+    padding: '14px 18px',
+    borderRadius: '16px',
+    marginBottom: '12px',
+    border: '1px solid rgba(231, 215, 209, 0.4)',
+    boxSizing: 'border-box'
+};
+
+const profileSectionTitleStyle = {
+    fontSize: '14px',
+    fontWeight: '600',
+    color: '#718096',
+    margin: '0 0 6px 0',
+};
+
+const profileDescriptionTextStyle = {
+    fontSize: '14px',
+    color: '#4a5568',
+    margin: 0,
+    lineHeight: '1.5',
+    wordBreak: 'break-word'
+};
+
+// ดีไซน์เม็ดแท็กสีหวานๆ
+const profileTagBadgeStyle = {
+    backgroundColor: '#fdeee9',
+    color: '#e49486',
+    padding: '4px 12px',
+    borderRadius: '12px',
+    fontSize: '12px',
+    fontWeight: '500',
+    border: '1px solid #fcdbd0'
+};
+
+// ไอเท็มช่องทางติดต่อสื่อสาร
+const profileContactItemStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    padding: '8px 12px',
+    borderRadius: '10px',
+    border: '1px solid #edf2f7'
+};
+
+const profileContactPlatformStyle = {
+    fontSize: '12px',
+    fontWeight: '700',
+    color: '#29414b', // ดึงสีเข้มจากปุ่มหลักของคุณโอ๊ตมาคุมธีม
+    backgroundColor: '#e2e8f0',
+    padding: '3px 8px',
+    borderRadius: '6px',
+    marginRight: '10px',
+    minWidth: '70px',
+    textAlign: 'center'
+};
+
+const profileContactValueStyle = {
+    fontSize: '13px',
+    color: '#4a5568',
+    fontWeight: '500',
+    userSelect: 'all' // ลัดให้ยูสเซอร์คลิกทีเดียวคลุมข้อความก๊อปปี้ไปแอดเพื่อนได้เลย
+};
+//end getOtherProfileModal
+
+//roomFromFindModal modal 1(ล่างสุด)
+const roomFromFindmodalOverlayStyle ={
+    position: 'fixed',
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)', // ทำฉากหลังมืดแบบโปร่งแสงครอบหน้าจอหลัก
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 9997, // มั่นใจได้ว่าจะไม่มีอะไรลอยทับหน้าต่างนี้
+
+    padding: '40px 30px',
+    overflowY: 'auto'
+};
+
+const roomFromFindModalCardStyle = {
+    backgroundImage:"linear-gradient(135deg, rgb(161, 210, 255) 0%, rgb(245, 245, 245) 50%, rgb(250, 186, 158) 100%)", 
+    padding: "20px 15px", 
+    borderRadius: "25px",
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: '15px',
+    width: '100%',
+    maxWidth: '1000px',
+    boxShadow: '0 20px 60px rgba(16, 26, 61, 0.53)',
+    maxHeight: '800px',
+    height: '100%',
+    overflowY: 'auto'
+    
+}
 export default Lobby;   
