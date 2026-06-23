@@ -99,7 +99,7 @@ const activation = async (req, res) => {
 const login = async (req, res) => {
     try {
         const { password, username } = req.body;
-        const user = await User.findOne({username : username.toLowerCase() })
+        const user = await User.findOne({ username })
         
         if (!user) return res.status(400).json({ message: "ไม่พบผู้ใช้"})
         if (!user.isActive) {
@@ -121,7 +121,8 @@ const login = async (req, res) => {
         return res.status(200).json(
             { 
                 token : loginToken,
-                username : user.displayName || user.username
+                username : user.displayName || user.username,
+                id : user._id
 
             })
     } catch (err) {

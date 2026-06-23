@@ -1,0 +1,234 @@
+{/* ปุ่ม "หาห้อง" หน้า lobby*/}
+.findRoomButton {
+    position: relative;
+    color: #29414b;
+    background-color: transparent;
+    border-radius: 30px;
+    padding: 12px 24px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.5s ease-in-out;
+    z-index: 1;
+    font-family:'Kanit' , sans-serif;
+    font-size: 18px;
+    margin-top: 25px;
+}
+
+.findRoomButton::before{
+    content:"";
+    position: absolute;
+
+    top: 0px; 
+    left: 0px; 
+    right: 0px; 
+    bottom: 0px;
+
+    border-radius: inherit;
+    background-color: rgb(228, 148, 134);
+    z-index: -1;
+    transition: all 0.5s ease-in-out;
+    box-shadow: 0px 4px 8px rgba(36, 36, 36, 0.377);
+}
+
+.findRoomButton::after{
+    content:"";
+    position: absolute;
+
+    top: 0px;
+    right: 0px;
+    left: 0px;
+    bottom: -2px;
+
+    border-radius: inherit;
+    background-color: rgb(197, 151, 139);
+    z-index: -2;
+}
+
+
+
+.findRoomButton:hover {
+    transform: translateY(-2px); /* 🎯 สั่งให้ปุ่มลอยขึ้นฟ้า 2 พิกเซล */
+}
+.findRoomButton:hover::before{
+    color:#20323a;
+    background-color: transparent;
+    background-image: linear-gradient(0deg, rgb(221, 117, 117) 0%, rgb(240, 174, 157) 100%);
+    box-shadow: 0 8px 14px rgba(34, 34, 34, 0.26);
+}
+
+.findRoomButton:hover::after{
+    background-color: rgb(206, 127, 113);
+}
+
+{/* ปุ่มของ Modal เช่น ปุ่มค้นหา ปุ่มยกเลิก*/}
+.findRoomModalButton {
+    position: relative;
+    color : rgb(255, 255, 255);
+    background-color: transparent;
+    border-radius: 35px;
+    padding : 10px 20px;
+    border : none;
+    cursor: pointer;
+    z-index: 1;
+    transition: all 0.1s ease-in-out;
+    font-family:'Kanit' , sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.15em
+}
+
+.findRoomModalButton::before{
+    content:"";
+    position: absolute;
+
+    top: 0px; 
+    left: 0px; 
+    right: 0px; 
+    bottom: 0px;
+
+    background-color: rgb(233, 134, 121);
+    z-index: -1;
+    border-radius: inherit;
+    transition: all 0.1s ease-in-out;
+
+
+    
+    
+}
+.findRoomModalButton::after{
+    content: "";
+    position: absolute;
+    background-color: rgb(199, 109, 74);
+
+    top: 0px; 
+    left: 0px; 
+    right: 0px; 
+    bottom: -3px;
+    transition: all 0.1s ease-in-out;
+
+    border-radius: inherit;
+    box-shadow: 0px 5px 16px rgba(36, 36, 36, 0.377);
+    z-index: -2;
+}
+
+.findRoomModalButton:hover {
+    transform : translateY(2px);
+}
+
+.findRoomModalButton:hover::after{
+    box-shadow: 0px 4px 8px rgba(36, 36, 36, 0.459);
+}
+
+{/* กล่องครอบปุ่ม ค้นหา กับ ยกเลิก ใน findRoomModal*/}
+.findRoomButtonBlockStyle {
+    display : flex;
+    justify-content: center;
+    gap: 60px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    
+    
+}
+
+{/* แทนกล่องดำของ <select> */}
+
+.selectModalStyle {
+    margin-left: 15px ;
+    width: 300px;
+    
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 10px;
+    
+    border: 1px solid #e7d7d1;
+    border-radius: 14px;
+    
+    background-color: #fff;
+    color: #7a7a7a;
+    
+    font-size: 14px;
+
+    outline: none;
+    font-family: 'kanit';
+    transition: all .25s ease;
+}
+
+.selectModalStyle:focus {
+    border-color: #df7777;
+
+    box-shadow: 0 0 8px rgba(223, 119, 119, 0.2);
+}
+
+
+.findRoomEachFormStyle {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    align-items: center;
+    padding: 0px 15px;
+    color: rgb(83, 91, 119);
+    
+}
+
+.calenderStyle {
+    margin-left: 15px ;
+    width: 300px;
+    
+    box-sizing: border-box;
+    padding: 10px 15px;
+    
+    border: 1px solid #e7d7d1;
+    border-radius: 14px;
+    
+    background-color: #31312f;
+    color: #d4d2d2;
+    
+    font-size: 14px;
+
+    outline: none;
+    font-family: 'kanit';
+    transition: all .25s ease;
+}
+
+.calenderStyle:focus {
+    border-color: #df7777; /* สีพีช/ชมพูเข้าเซ็ตกับปุ่มและเว็บของคุณโอ๊ต */
+    box-shadow: 0 0 8px rgba(223, 119, 119, 0.2);
+}
+
+.joinRoomButton {
+    background-image: linear-gradient(rgb(231, 163, 146) 0%, rgb(207, 119, 119) 100%);
+    color: rgb(49, 51, 58);
+    font-family: kanit ;
+    border : none;
+    border-radius: 25px;
+    padding: 10px 15px;
+    font-size: 12px;
+    box-shadow: 0 0 8px rgba(75, 55, 55, 0.795);
+    cursor: pointer;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    margin-left: auto;
+    margin-right: 15px;
+}
+
+.joinRoomButton:hover{
+    transform: translateY(2px);
+}
+
+.kickButton{
+    background-color: #f7aeae;
+    color: #573a3a;
+    border-radius: 24px;
+    padding: 8px 10px;
+    border: none;
+    font-family: 'kanit', sans-serif;
+    letter-spacing: 0.2px;
+    font-size: 10px;
+    font-weight: 600;
+    box-shadow: 0 0 4px rgba(75, 55, 55, 0.795);
+    transition: all 0.15s ease-in-out;
+    margin-top: 4px;
+}
+
+.kickButton:hover{
+    background-color: rgb(233, 156, 156)
+}

@@ -20,6 +20,7 @@ function Login(){
             const response = await axios.post('http://localhost:5000/api/auth/login', { username, password })
             localStorage.setItem('token', response.data.token)
             localStorage.setItem('username', response.data.username)
+            localStorage.setItem('myUserId', response.data.id)
             alert("เข้าสู่ระบบสำเร็จ");
             navigate('/profile');//โยนเข้าหน้านี้ไปก่อน ในอนาคตจะโยนไปหน้เา lobbyแทน
 

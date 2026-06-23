@@ -11,10 +11,10 @@ router.post('/find-room', auth, partyControllers.findRoom);
 router.get('/get-other-profile/:findedId', auth, partyControllers.getOtherProfile);
 router.put('/complete-room/:roomId', auth, partyControllers.completeRoom);
 router.patch('/update-room/:roomId', auth, partyControllers.updateRoom);
-router.post('/kick-player/:roomId', auth, partyControllers.kickPlayer);
+router.post('/kick-player/:roomId/:playerId', auth, partyControllers.kickPlayer);
 router.post('/join-room/:roomId', auth, partyControllers.joinRoom);
 router.post('/leave-room/:roomId', auth, partyControllers.leaveRoom)
-router.post('/change-host/:roomId', auth, partyControllers.changeHost)
+router.post('/change-host/:roomId/:playerId', auth, partyControllers.changeHost)
 
 
 

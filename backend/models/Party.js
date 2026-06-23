@@ -29,7 +29,7 @@ const partyScheme = new mongoose.Schema({
     },
     server: {
         type: String,
-        enum: ['SEA', 'NA', 'EU']
+        enum: ['SEA', 'NA', 'EU', 'OCE', 'LATAM', 'MEA']
     },
     hasMic: {
         type: Boolean,
