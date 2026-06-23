@@ -750,7 +750,7 @@ function Lobby(){
 
                         {/* คำอธิบายปาร์ตี้เพิ่มเติม */}
                         <div style={roomDescBlockStyle}>
-                            <span style={{ fontSize: '13px', fontWeight: '600', color: '#718096', display: 'block', marginBottom: '4px' }}>📝 รายละเอียดตี้</span>
+                            <span style={{ fontSize: '13px', fontWeight: '600', color: '#718096', display: 'block', marginBottom: '4px' }}>📝 รายละเอียดปาร์ตี้</span>
                             <p style={{ fontSize: '14px', color: '#4a5568', margin: 0, lineHeight: '1.5', wordBreak: 'break-word' }}>
                                 {singleRoom.description || "โฮสต์ไม่ได้ระบุรายละเอียดเพิ่มเติมไว้"}
                             </p>
@@ -771,22 +771,21 @@ function Lobby(){
                         </div>
 
                         {/* rank */}
-                        {(singleRoom.gameName === "LOL" || singleRoom.gameName === "Valorant") && (
-                            <div style={roomInfoGridStyle}>
-                                <p> rank : {
+                        <div style={roomInfoGridStyle}>
+                            {(singleRoom.gameName === "LOL" || singleRoom.gameName === "Valorant") && (
+                                <p style={roomInfoItemStyle}> rank : {
                                 GAME_RANKS[singleRoom?.gameName]
-                                ?.find(rank => rank.id === singleRoom.rankRequiment)
+                                ?.find(rank => rank.id === singleRoom?.rankRequirement)
                                 ?.name
                                 }
                                 </p>
-                            </div>
-                        )}
-                        
+                            )}
+                            {/* เวลาเล่น (17.00 - 23.00 น.) เป็นเวลาไทย */}
+                            <p style={roomInfoItemStyle}>⏱️ เวลารวมตี้: {formatGameTime(singleRoom.playTime?.start)} - {formatGameTime(singleRoom.playTime?.end)} น.</p>
+                            
+                         </div>
 
-                        {/* เวลาเล่น (17.00 - 23.00 น.) เป็นเวลาไทย */}
-                        <div style={roomInfoGridStyle}>
-                            ⏱️ เวลารวมตี้: {formatGameTime(singleRoom.playTime?.start)} - {formatGameTime(singleRoom.playTime?.end)} น.
-                        </div>
+                        
 
                         {/* บล็อกแสดงรายชื่อเมมเบอร์ในตี้ */}
                         <div style={membersSectionStyle}>
@@ -826,7 +825,7 @@ function Lobby(){
                             style={{ width: '100%', padding: '14px', borderRadius: '16px', fontSize: '16px', fontWeight: '600' }}
                             onClick={() => handleJoinRoom(singleRoom._id)}
                         >
-                            ยื่นคำขอเข้าร่วมปาร์ตี้
+                            เข้าร่วมปาร์ตี้
                         </button>
                     </div> 
                 </div>
